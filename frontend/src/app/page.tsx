@@ -1,103 +1,139 @@
+"use client";
+import { useState } from "react";
 import Image from "next/image";
+import Particles from "@/components/ui/particles";
+import { SmoothCursor } from "@/components/ui/smooth-cursor";
+import { TextAnimate } from "@/components/ui/text-animate";
+import { ShimmerButton } from "@/components/ui/shimmer-button";
+import { Card, CardContent } from "@/components/ui/card";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Upload, FileText, X } from "lucide-react";
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedLanguage, setSelectedLanguage] = useState("en");
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+  const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file && file.type === "text/plain") {
+      setSelectedFile(file);
+    }
+  };
+
+  const removeFile = () => {
+    setSelectedFile(null);
+  };
+
+  return (
+    <div className="relative min-h-screen bg-background text-foreground">
+      <Particles
+        className="absolute inset-0"
+        quantity={100}
+        ease={80}
+        staticity={50}
+        color="#000000"
+        size={0.8}
+        refresh
+      />
+      <SmoothCursor />
+      
+      <div className="relative z-10 flex flex-col items-center justify-center min-h-screen px-4 py-16">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <TextAnimate
+            animation="blurInUp"
+            by="word"
+            className="text-6xl md:text-7xl lg:text-8xl font-bold mb-6"
+            as="h1"
           >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+            WordCloud Generator
+          </TextAnimate>
+          <TextAnimate
+            animation="fadeIn"
+            by="word"
+            delay={0.5}
+            className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto"
+            as="p"
           >
-            Read our docs
-          </a>
+            Transform your text into beautiful, interactive word clouds. Upload a .txt file and select your language to get started.
+          </TextAnimate>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
+
+        {/* Main Content */}
+        <div className="w-full max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 mb-12">
+          {/* Upload File Section */}
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold">Upload Text File</h3>
+            <Card className="border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors">
+              <CardContent className="p-8">
+                {!selectedFile ? (
+                  <label className="flex flex-col items-center justify-center cursor-pointer space-y-4">
+                    <Upload className="w-12 h-12 text-muted-foreground" />
+                    <div className="text-center">
+                      <p className="text-lg font-medium">Click to upload</p>
+                      <p className="text-sm text-muted-foreground">or drag and drop your .txt file here</p>
+                    </div>
+                    <input
+                      type="file"
+                      accept=".txt"
+                      onChange={handleFileUpload}
+                      className="hidden"
+                    />
+                  </label>
+                ) : (
+                  <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <FileText className="w-8 h-8 text-primary" />
+                      <div>
+                        <p className="font-medium">{selectedFile.name}</p>
+                        <p className="text-sm text-muted-foreground">
+                          {(selectedFile.size / 1024).toFixed(1)} KB
+                        </p>
+                      </div>
+                    </div>
+                    <button
+                      onClick={removeFile}
+                      className="p-1 hover:bg-background rounded-full transition-colors"
+                    >
+                      <X className="w-5 h-5" />
+                    </button>
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Select Language Section */}
+          <div className="space-y-4">
+            <h3 className="text-xl font-semibold">Select Language</h3>
+            <Card>
+              <CardContent className="p-6">
+                <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Choose language" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="en">🇺🇸 English</SelectItem>
+                    <SelectItem value="id">🇮🇩 Indonesian</SelectItem>
+                  </SelectContent>
+                </Select>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Generate Button */}
+        <div className="text-center">
+          <ShimmerButton
+            className="px-8 py-4 text-lg font-semibold"
+            disabled={!selectedFile}
+            background={selectedFile ? "rgba(0, 0, 0, 1)" : "rgba(100, 100, 100, 0.5)"}
+          >
+            <Upload className="w-5 h-5 mr-2" />
+            Generate Word Cloud
+          </ShimmerButton>
+        </div>
+       </div>
     </div>
   );
 }
