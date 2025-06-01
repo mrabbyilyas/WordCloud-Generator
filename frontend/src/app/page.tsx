@@ -12,11 +12,35 @@ import { Upload, FileText, X } from "lucide-react";
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState("en");
+  const [isDragOver, setIsDragOver] = useState(false);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file && file.type === "text/plain") {
       setSelectedFile(file);
+    }
+  };
+
+  const handleDragOver = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (event: React.DragEvent<HTMLDivElement>) => {
+    event.preventDefault();
+    setIsDragOver(false);
+    
+    const files = event.dataTransfer.files;
+    if (files.length > 0) {
+      const file = files[0];
+      if (file.type === "text/plain") {
+        setSelectedFile(file);
+      }
     }
   };
 
@@ -64,14 +88,31 @@ export default function Home() {
           {/* Upload File Section */}
           <div className="space-y-4">
             <h3 className="text-xl font-semibold">Upload Text File</h3>
-            <Card className="border-2 border-dashed border-muted-foreground/25 hover:border-muted-foreground/50 transition-colors">
+            <Card 
+              className={`border-2 border-dashed transition-all duration-200 ${
+                isDragOver 
+                  ? "border-primary bg-primary/5 scale-105" 
+                  : "border-muted-foreground/25 hover:border-muted-foreground/50"
+              }`}
+              onDragOver={handleDragOver}
+              onDragLeave={handleDragLeave}
+              onDrop={handleDrop}
+            >
               <CardContent className="p-8">
                 {!selectedFile ? (
                   <label className="flex flex-col items-center justify-center cursor-pointer space-y-4">
-                    <Upload className="w-12 h-12 text-muted-foreground" />
+                    <Upload className={`w-12 h-12 transition-colors ${
+                      isDragOver ? "text-primary" : "text-muted-foreground"
+                    }`} />
                     <div className="text-center">
-                      <p className="text-lg font-medium">Click to upload</p>
-                      <p className="text-sm text-muted-foreground">or drag and drop your .txt file here</p>
+                      <p className={`text-lg font-medium transition-colors ${
+                        isDragOver ? "text-primary" : ""
+                      }`}>
+                        {isDragOver ? "Drop your file here" : "Click to upload"}
+                      </p>
+                      <p className="text-sm text-muted-foreground">
+                        {isDragOver ? "Release to upload" : "or drag and drop your .txt file here"}
+                      </p>
                     </div>
                     <input
                       type="file"
