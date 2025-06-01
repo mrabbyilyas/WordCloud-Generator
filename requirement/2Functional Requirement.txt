@@ -1,0 +1,48 @@
+# Functional Requirements for Word Cloud Generator
+
+**Please note, these functional requirements are exclusively for the frontend folder project. The backend, built with Python and FastAPI, is complete and the API is ready to use with the base URL: `https://mrabbyilyas-wordcloud-generator.hf.space`.**
+
+This document outlines the functional requirements for the Word Cloud Generator, a web-based application for creating and visualizing word clouds from text files.
+
+## 1. User Interface (UI) and Experience (UX)
+
+* **1.1. Hero Section:** The main page will feature a prominent hero section with the title "Word Cloud Generator" and a subtitle that reads "Transform your text into beautiful, interactive word clouds. Upload a .txt file and select your language to get started," as shown in the provided screenshots.
+* **1.2. Background:** A dynamic particle effect, as specified in the requirements to be from Magic UI, will serve as a persistent background that remains fully visible even when the user scrolls.
+* **1.3. Cursor:** The application will implement a smooth cursor effect from Magic UI to enhance the user's navigational experience.
+* **1.4. Responsiveness:** All design elements and components must be fully responsive to ensure a seamless experience on different screen sizes.
+* **1.5. Navigation:** In accordance with the project brief, no navigation bar is required.
+* **1.6. Personal Credentials:** The creator's photo and a link to their LinkedIn profile will be placed in the bottom right corner of the page.
+
+---
+
+## 2. Core Functionality
+
+* **2.1. File Input:** The UI must include a file input area where users can either drag and drop or click to browse and upload a single `.txt` file. An example image shows this area displaying the file name and size after a file is selected.
+* **2.2. Language Selection:** A dropdown menu must be present next to the file input, allowing users to select either "English" or "Indonesian" as the text processing language.
+* **2.3. Word Cloud Generation:** A button labeled "Generate Word Cloud" will trigger the generation process.
+* **2.4. API Interaction:**
+    * Upon clicking the generation button, the frontend will send a `POST` request to the `/upload` endpoint. This is detailed in the provided API documentation.
+    * The request must be of type `multipart/form-data` and contain two parts: the user-uploaded text file and the selected language string ('english' or 'indonesian'), as specified in the API's endpoint description.
+
+---
+
+## 3. Word Cloud Visualization
+
+* **3.1. Display:** The generated word cloud will be rendered on the page using the D3 Wordcloud library.
+* **3.2. Data Source:** The visualization will be dynamically created using the `word_frequencies` object found in the JSON response from the API. The API documentation confirms that this object contains the words and their corresponding frequencies.
+* **3.3. Interactivity:** The word cloud will be interactive. As suggested by an uploaded image of the final visualization, hovering over a word should display details like its occurrence count in a tooltip.
+
+---
+
+## 4. Technology Stack and Setup
+
+* **4.1. Frontend Framework:** The application's foundation is a Next.js project.
+* **4.2. UI Components:** The project requirements mandate the use of Magic UI for all frontend components.
+* **4.3. Backend API:** The application is designed to communicate with the pre-existing Python and FastAPI backend.
+* **4.4. Development Environment:** The base project is already configured to run locally using the `npm run dev` command.
+
+---
+
+## 5. User Feedback and Error Handling
+
+* **5.1. Status Messages:** The application will provide feedback to the user. A provided image shows a success message, "Wordcloud generated successfully for english text," appearing after a successful operation. The application must also handle and display error messages, such as "Invalid file type," as defined in the API's error response schema.

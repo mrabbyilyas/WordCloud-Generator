@@ -1,0 +1,9 @@
+fastapi
+uvicorn
+python-multipart
+nltk
+Sastrawi
+wordcloud
+matplotlib
+numpy
+jinja2

@@ -1,0 +1,19 @@
+- This folder project is a use for frontend for my project in creating wordcloud
+- Please note this is very very simple project 
+- The backend is using a Python and FastAPI 
+- I want to use a magic ui for every component
+- The magic UI MCP is ready in my IDE
+- The base code for this project already use next js
+- For basic run like "npm run dev" is already worked
+- Make sure all the design is responsive
+- no need to give navbar
+- just put a hero section with the title "Word Cloud Generator"
+  - and there is 1 input file .txt and also a language selection
+- Put my credential in the right bottom, like my photo and my linkedin link
+- use particle effect as background from magic UI "https://magicui.design/r/particles" so when i scroll down, the particle is not missing
+- use smooth cursor from magic ui "https://magicui.design/r/smooth-cursor"
+- use D3 wordcloud to visualize the result of the wordcloud-api
+- use white background, no need for darkmode and light mode
+
+for the API documentation please find attached wordcloud_api_json.json
+

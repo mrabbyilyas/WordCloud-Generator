@@ -1,0 +1,39 @@
+# Virtual environment
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git
+.git/
+.gitignore
+
+# Documentation
+README.md
+*.md
+
+# Test files
+*test*.txt
+eng-test.txt
+id-test.txt
+
+# Logs
+*.log
+
+# Environment files
+.env
+.env.local
+.env.*.local
