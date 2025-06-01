@@ -13,6 +13,9 @@ export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [selectedLanguage, setSelectedLanguage] = useState("en");
   const [isDragOver, setIsDragOver] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [wordCloudData, setWordCloudData] = useState<any>(null);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -46,6 +49,37 @@ export default function Home() {
 
   const removeFile = () => {
     setSelectedFile(null);
+    setError(null);
+    setWordCloudData(null);
+  };
+
+  const generateWordCloud = async () => {
+    if (!selectedFile) return;
+
+    setIsLoading(true);
+    setError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+      formData.append('language', selectedLanguage);
+
+      const response = await fetch('https://mrabbyilyas-wordcloud-generator.hf.space/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const data = await response.json();
+      setWordCloudData(data);
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'An error occurred while generating word cloud');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -167,13 +201,39 @@ export default function Home() {
         <div className="text-center">
           <ShimmerButton
             className="px-8 py-4 text-lg font-semibold"
-            disabled={!selectedFile}
-            background={selectedFile ? "rgba(0, 0, 0, 1)" : "rgba(100, 100, 100, 0.5)"}
+            disabled={!selectedFile || isLoading}
+            background={selectedFile && !isLoading ? "rgba(0, 0, 0, 1)" : "rgba(100, 100, 100, 0.5)"}
+            onClick={generateWordCloud}
           >
             <Upload className="w-5 h-5 mr-2" />
-            Generate Word Cloud
+            {isLoading ? 'Generating...' : 'Generate Word Cloud'}
           </ShimmerButton>
         </div>
+
+        {/* Error Message */}
+        {error && (
+          <div className="mt-8 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-center">
+            <p className="font-medium">Error:</p>
+            <p>{error}</p>
+          </div>
+        )}
+
+        {/* Word Cloud Result */}
+        {wordCloudData && (
+          <div className="mt-8">
+            <Card>
+              <CardContent className="p-6">
+                <h3 className="text-xl font-semibold mb-4 text-center">Generated Word Cloud</h3>
+                <div className="bg-muted rounded-lg p-4 text-center">
+                  <p className="text-muted-foreground">Word cloud visualization will be displayed here</p>
+                  <pre className="mt-4 text-xs text-left overflow-auto">
+                    {JSON.stringify(wordCloudData, null, 2)}
+                  </pre>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        )}
        </div>
     </div>
   );
