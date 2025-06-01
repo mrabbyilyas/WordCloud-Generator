@@ -1,33 +1,68 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
-import { Download, Maximize2, Minimize2 } from "lucide-react";
+import { Download, Maximize2, Minimize2, Loader2 } from "lucide-react";
 import Image from "next/image";
 
 interface WordCloudDisplayProps {
-  imageUrl: string;
+  imageData?: string; // Can be base64 string or URL
+  imageUrl?: string; // Deprecated: use imageData instead
   alt?: string;
   className?: string;
   onDownload?: () => void;
+  isLoading?: boolean;
 }
 
 export function WordCloudDisplay({
-  imageUrl,
+  imageData,
+  imageUrl, // Backward compatibility
   alt = "Word Cloud",
   className,
   onDownload,
+  isLoading = false,
 }: WordCloudDisplayProps) {
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [imageLoaded, setImageLoaded] = useState(false);
   const [imageError, setImageError] = useState(false);
+  const [processedImageSrc, setProcessedImageSrc] = useState<string>("");
+
+  // Process image data (base64 or URL)
+  useEffect(() => {
+    const imageSrc = imageData || imageUrl;
+    if (!imageSrc) {
+      setProcessedImageSrc("");
+      return;
+    }
+
+    // Check if it's base64 data
+    if (imageSrc.startsWith('data:image/')) {
+      setProcessedImageSrc(imageSrc);
+    } else if (imageSrc.includes('base64,')) {
+      // Handle base64 without data URL prefix
+      setProcessedImageSrc(`data:image/png;base64,${imageSrc.split('base64,')[1]}`);
+    } else {
+      // Assume it's a URL
+      setProcessedImageSrc(imageSrc);
+    }
+  }, [imageData, imageUrl]);
 
   const handleDownload = async () => {
-    if (!onDownload) {
+    if (!onDownload && processedImageSrc) {
       // Default download behavior
       try {
-        const response = await fetch(imageUrl);
-        const blob = await response.blob();
+        let blob: Blob;
+        
+        if (processedImageSrc.startsWith('data:image/')) {
+          // Handle base64 data
+          const response = await fetch(processedImageSrc);
+          blob = await response.blob();
+        } else {
+          // Handle URL
+          const response = await fetch(processedImageSrc);
+          blob = await response.blob();
+        }
+        
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement("a");
         link.href = url;
@@ -39,7 +74,7 @@ export function WordCloudDisplay({
       } catch (error) {
         console.error("Download failed:", error);
       }
-    } else {
+    } else if (onDownload) {
       onDownload();
     }
   };
@@ -48,7 +83,25 @@ export function WordCloudDisplay({
     setIsFullscreen(!isFullscreen);
   };
 
-  if (imageError) {
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className={cn(
+        "flex items-center justify-center p-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg bg-gray-50 dark:bg-gray-800",
+        className
+      )}>
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin text-blue-500 mx-auto mb-2" />
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            Generating word cloud...
+          </p>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (imageError || (!processedImageSrc && !isLoading)) {
     return (
       <div className={cn(
         "flex items-center justify-center p-8 border-2 border-dashed border-gray-300 dark:border-gray-600 rounded-lg",
@@ -57,11 +110,16 @@ export function WordCloudDisplay({
         <div className="text-center">
           <div className="text-red-500 mb-2">⚠️</div>
           <p className="text-sm text-gray-500 dark:text-gray-400">
-            Failed to load word cloud image
+            {imageError ? "Failed to load word cloud image" : "No word cloud to display"}
           </p>
         </div>
       </div>
     );
+  }
+
+  // Don't render if no image source
+  if (!processedImageSrc) {
+    return null;
   }
 
   return (
@@ -72,13 +130,15 @@ export function WordCloudDisplay({
       )}>
         {/* Loading skeleton */}
         {!imageLoaded && (
-          <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse" />
+          <div className="absolute inset-0 bg-gray-200 dark:bg-gray-700 animate-pulse flex items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-gray-400" />
+          </div>
         )}
         
         {/* Image */}
         <div className="relative">
           <Image
-            src={imageUrl}
+            src={processedImageSrc}
             alt={alt}
             width={800}
             height={600}
@@ -89,6 +149,7 @@ export function WordCloudDisplay({
             onLoad={() => setImageLoaded(true)}
             onError={() => setImageError(true)}
             priority
+            unoptimized={processedImageSrc.startsWith('data:image/')}
           />
           
           {/* Overlay controls */}
@@ -118,11 +179,12 @@ export function WordCloudDisplay({
         <div className="fixed inset-0 z-50 bg-black bg-opacity-90 flex items-center justify-center p-4">
           <div className="relative max-w-full max-h-full">
             <Image
-              src={imageUrl}
+              src={processedImageSrc}
               alt={alt}
               width={1200}
               height={900}
               className="max-w-full max-h-full object-contain"
+              unoptimized={processedImageSrc.startsWith('data:image/')}
             />
             <button
               onClick={toggleFullscreen}
