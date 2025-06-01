@@ -11,18 +11,8 @@ interface Language {
 }
 
 const SUPPORTED_LANGUAGES: Language[] = [
-  { code: "en", name: "English", flag: "🇺🇸" },
-  { code: "es", name: "Spanish", flag: "🇪🇸" },
-  { code: "fr", name: "French", flag: "🇫🇷" },
-  { code: "de", name: "German", flag: "🇩🇪" },
-  { code: "it", name: "Italian", flag: "🇮🇹" },
-  { code: "pt", name: "Portuguese", flag: "🇵🇹" },
-  { code: "ru", name: "Russian", flag: "🇷🇺" },
-  { code: "zh", name: "Chinese", flag: "🇨🇳" },
-  { code: "ja", name: "Japanese", flag: "🇯🇵" },
-  { code: "ko", name: "Korean", flag: "🇰🇷" },
-  { code: "ar", name: "Arabic", flag: "🇸🇦" },
-  { code: "hi", name: "Hindi", flag: "🇮🇳" },
+  { code: "english", name: "English", flag: "🇺🇸" },
+  { code: "indonesian", name: "Indonesian", flag: "🇮🇩" },
 ];
 
 interface LanguageSelectorProps {
@@ -42,7 +32,7 @@ export function LanguageSelector({
   
   const selectedLang = SUPPORTED_LANGUAGES.find(
     (lang) => lang.code === selectedLanguage
-  ) || SUPPORTED_LANGUAGES[0];
+  ) || SUPPORTED_LANGUAGES[0]; // Default to English
 
   const handleSelect = (language: Language) => {
     onLanguageChange(language.code);
