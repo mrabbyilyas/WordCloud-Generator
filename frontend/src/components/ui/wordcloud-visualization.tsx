@@ -43,10 +43,10 @@ export function WordCloudVisualization({
     // Create color scale
     const color = d3.scaleOrdinal(d3.schemeCategory10);
 
-    // Prepare words data with conservative sizing to minimize collision
+    // Prepare words data with increased sizing for better visibility
     const wordsData = words.map((d, i) => ({
       text: d.text,
-      size: Math.max(10, Math.min(35, d.size)), // Much smaller max size for cleaner layout
+      size: Math.max(16, Math.min(50, d.size * 1.3)), // Increased minimum and maximum font sizes
       frequency: d.frequency,
       index: i
     }));
@@ -57,7 +57,7 @@ export function WordCloudVisualization({
     const layout = cloud()
       .size([width, height])
       .words(wordsData)
-      .padding(15) // Maximum padding for clean separation
+      .padding(20) // Increased padding to prevent collision
       .rotate(() => {
         // Primarily horizontal layout for better readability
         const angles = [0, 0, 0, 90, -90]; // Favor horizontal orientation
@@ -67,7 +67,7 @@ export function WordCloudVisualization({
       .fontSize(d => d.size || 20)
       .spiral("archimedean") // Back to archimedean for smoother distribution
       .random(() => 0.5) // Fixed random seed for consistent layout
-      .timeInterval(15) // More time for optimal positioning
+      .timeInterval(20) // More time for optimal positioning to reduce collision
       .on("end", draw)
       .on("word", (word) => {
         // Word positioned callback

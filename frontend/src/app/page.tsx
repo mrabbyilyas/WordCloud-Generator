@@ -38,24 +38,38 @@ export default function Home() {
       return [];
     }
     
-    // Deduplicate and merge frequencies for case-insensitive words
+    // Enhanced deduplicate and merge frequencies for case-insensitive words
     const deduplicatedFreqs: { [key: string]: number } = {};
+    const seenWords = new Set<string>();
     
     Object.entries(wordCloudData.word_frequencies).forEach(([word, frequency]: [string, any]) => {
-      const cleanWord = word.toLowerCase().trim();
-      // Filter out very short words and non-alphabetic words
-      if (cleanWord.length >= 3 && /^[a-zA-Z]+$/.test(cleanWord)) {
-        deduplicatedFreqs[cleanWord] = (deduplicatedFreqs[cleanWord] || 0) + frequency;
+      // More aggressive cleaning: remove all non-alphabetic characters, convert to lowercase, trim
+      const cleanWord = word.replace(/[^a-zA-Z]/g, '').toLowerCase().trim();
+      
+      // Filter out very short words, non-alphabetic words, and ensure uniqueness
+      if (cleanWord.length >= 3 && /^[a-zA-Z]+$/.test(cleanWord) && !seenWords.has(cleanWord)) {
+        seenWords.add(cleanWord);
+        deduplicatedFreqs[cleanWord] = (deduplicatedFreqs[cleanWord] || 0) + (typeof frequency === 'number' ? frequency : 1);
+      } else if (cleanWord.length >= 3 && /^[a-zA-Z]+$/.test(cleanWord) && seenWords.has(cleanWord)) {
+        // If word already exists, just add to its frequency
+        deduplicatedFreqs[cleanWord] = (deduplicatedFreqs[cleanWord] || 0) + (typeof frequency === 'number' ? frequency : 1);
       }
     });
     
-    return Object.entries(deduplicatedFreqs).map(([word, frequency]) => {
-      return {
-        text: word,
-        size: Math.max(12, Math.min(60, frequency * 8)), // Scale frequency to reasonable size
-        frequency: frequency
-      };
-    }).sort((a, b) => b.frequency - a.frequency); // Sort by frequency descending
+    // Convert to array and ensure no duplicates by using Map
+    const uniqueWordsMap = new Map<string, {text: string; size: number; frequency: number}>();
+    
+    Object.entries(deduplicatedFreqs).forEach(([word, frequency]) => {
+      if (!uniqueWordsMap.has(word)) {
+        uniqueWordsMap.set(word, {
+          text: word,
+          size: Math.max(12, Math.min(60, frequency * 8)), // Scale frequency to reasonable size
+          frequency: frequency
+        });
+      }
+    });
+    
+    return Array.from(uniqueWordsMap.values()).sort((a, b) => b.frequency - a.frequency); // Sort by frequency descending
   }, [wordCloudData?.word_frequencies]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
