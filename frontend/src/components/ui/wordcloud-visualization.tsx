@@ -1,0 +1,176 @@
+"use client";
+
+import { useEffect, useRef, useState } from "react";
+import * as d3 from "d3";
+import cloud from "d3-cloud";
+
+interface WordData {
+  text: string;
+  size: number;
+  frequency?: number;
+}
+
+interface WordCloudVisualizationProps {
+  words: WordData[];
+  width?: number;
+  height?: number;
+  onWordClick?: (word: WordData) => void;
+  onWordHover?: (word: WordData | null) => void;
+}
+
+export function WordCloudVisualization({
+  words,
+  width = 800,
+  height = 400,
+  onWordClick,
+  onWordHover,
+}: WordCloudVisualizationProps) {
+  const svgRef = useRef<SVGSVGElement>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
+  useEffect(() => {
+    if (!words || words.length === 0 || !svgRef.current) {
+      setIsLoading(false);
+      return;
+    }
+
+
+    setIsLoading(true);
+
+    // Clear previous content
+    d3.select(svgRef.current).selectAll("*").remove();
+
+    // Create color scale
+    const color = d3.scaleOrdinal(d3.schemeCategory10);
+
+    // Prepare words data with conservative sizing to minimize collision
+    const wordsData = words.map((d, i) => ({
+      text: d.text,
+      size: Math.max(10, Math.min(35, d.size)), // Much smaller max size for cleaner layout
+      frequency: d.frequency,
+      index: i
+    }));
+
+
+
+    // Create layout with maximum collision avoidance
+    const layout = cloud()
+      .size([width, height])
+      .words(wordsData)
+      .padding(15) // Maximum padding for clean separation
+      .rotate(() => {
+        // Primarily horizontal layout for better readability
+        const angles = [0, 0, 0, 90, -90]; // Favor horizontal orientation
+        return angles[Math.floor(Math.random() * angles.length)];
+      })
+      .font("Arial, sans-serif")
+      .fontSize(d => d.size || 20)
+      .spiral("archimedean") // Back to archimedean for smoother distribution
+      .random(() => 0.5) // Fixed random seed for consistent layout
+      .timeInterval(15) // More time for optimal positioning
+      .on("end", draw)
+      .on("word", (word) => {
+        // Word positioned callback
+      });
+
+    try {
+      layout.start();
+    } catch (error) {
+      console.error('Error starting word cloud layout:', error);
+      setIsLoading(false);
+    }
+
+    function draw(layoutWords: any[]) {
+      
+      if (!layoutWords || layoutWords.length === 0) {
+        console.warn('No words to draw');
+        setIsLoading(false);
+        return;
+      }
+
+      const svg = d3.select(svgRef.current);
+      
+      const g = svg
+        .append("g")
+        .attr("transform", `translate(${width / 2},${height / 2})`);
+
+      const text = g
+        .selectAll("text")
+        .data(layoutWords)
+        .enter()
+        .append("text")
+        .style("font-size", d => `${d.size}px`)
+        .style("font-family", "Arial, sans-serif")
+        .style("font-weight", "bold")
+        .style("fill", (d, i) => color(d.index?.toString() || i.toString()))
+        .style("cursor", "pointer")
+        .attr("text-anchor", "middle")
+        .attr("dominant-baseline", "central")
+        .attr("transform", d => {
+          const x = d.x || 0;
+          const y = d.y || 0;
+          const rotate = d.rotate || 0;
+          return `translate(${x},${y})rotate(${rotate})`;
+        })
+        .text(d => d.text)
+        .on("click", function(event, d) {
+          if (onWordClick) {
+            onWordClick(d as WordData);
+          }
+        })
+        .on("mouseover", function(event, d) {
+          d3.select(this)
+            .transition()
+            .duration(200)
+            .style("opacity", 0.7)
+            .style("text-decoration", "underline");
+          
+          if (onWordHover) {
+            onWordHover(d as WordData);
+          }
+        })
+        .on("mouseout", function(event, d) {
+          d3.select(this)
+            .transition()
+            .duration(200)
+            .style("opacity", 1)
+            .style("text-decoration", "none");
+          
+          if (onWordHover) {
+            onWordHover(null);
+          }
+        });
+
+      // Add entrance animation
+      text
+        .style("opacity", 0)
+        .transition()
+        .duration(1000)
+        .style("opacity", 1)
+        .on("end", () => {
+          setIsLoading(false);
+        });
+
+
+    }
+  }, [words, width, height]);
+
+  return (
+    <div className="w-full flex justify-center relative">
+      {isLoading && (
+        <div className="absolute inset-0 flex items-center justify-center bg-background/80 rounded-lg z-10">
+          <div className="flex flex-col items-center space-y-2">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+            <p className="text-sm text-muted-foreground">Generating word cloud...</p>
+          </div>
+        </div>
+      )}
+      <svg
+        ref={svgRef}
+        width={width}
+        height={height}
+        className="border border-muted-foreground/20 rounded-lg bg-background"
+      />
+    </div>
+  );
+}

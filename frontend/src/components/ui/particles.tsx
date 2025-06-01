@@ -157,8 +157,9 @@ export const Particles: React.FC<ParticlesProps> = ({
 
   const resizeCanvas = () => {
     if (canvasContainerRef.current && canvasRef.current && context.current) {
-      canvasSize.current.w = canvasContainerRef.current.offsetWidth;
-      canvasSize.current.h = canvasContainerRef.current.offsetHeight;
+      // Use viewport dimensions for fixed positioning
+      canvasSize.current.w = typeof window !== 'undefined' ? window.innerWidth : canvasContainerRef.current.offsetWidth;
+      canvasSize.current.h = typeof window !== 'undefined' ? Math.max(window.innerHeight, document.documentElement.scrollHeight) : canvasContainerRef.current.offsetHeight;
 
       canvasRef.current.width = canvasSize.current.w * dpr;
       canvasRef.current.height = canvasSize.current.h * dpr;
