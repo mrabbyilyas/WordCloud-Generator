@@ -16,24 +16,56 @@ function WordCloudGenerator() {
   const [isLoading, setIsLoading] = useState(false);
   const [wordCloudData, setWordCloudData] = useState<WordCloudResponse | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [processingStep, setProcessingStep] = useState<string>("");
+  const [isDownloading, setIsDownloading] = useState(false);
   const { addNotification } = useNotifications();
 
   const handleFileSelect = async (file: File) => {
     setIsLoading(true);
     setError(null);
     setWordCloudData(null);
+    setUploadProgress(0);
+    setProcessingStep("");
 
     try {
+      // Step 1: File validation
+      setProcessingStep("Validating file...");
+      setUploadProgress(10);
+      await new Promise(resolve => setTimeout(resolve, 500)); // Simulate validation time
+
+      // Step 2: Upload preparation
+      setProcessingStep("Preparing upload...");
+      setUploadProgress(25);
+      await new Promise(resolve => setTimeout(resolve, 300));
+
       addNotification({
         type: "loading",
         message: "Processing your file...",
         persistent: true,
       });
 
+      // Step 3: Uploading file
+      setProcessingStep("Uploading file...");
+      setUploadProgress(50);
+
+      // Step 4: Processing on server
+      setProcessingStep("Analyzing text content...");
+      setUploadProgress(70);
+
       const response = await WordCloudApiService.uploadFile(
         file,
         selectedLanguage as "english" | "indonesian"
       );
+
+      // Step 5: Generating visualization
+      setProcessingStep("Generating word cloud...");
+      setUploadProgress(90);
+      await new Promise(resolve => setTimeout(resolve, 500));
+
+      // Step 6: Complete
+      setProcessingStep("Complete!");
+      setUploadProgress(100);
 
       setWordCloudData(response);
       addNotification({
@@ -45,6 +77,7 @@ function WordCloudGenerator() {
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : "An unexpected error occurred";
       setError(errorMessage);
+      setProcessingStep("Error occurred");
       addNotification({
         type: "error",
         title: "Generation Failed",
@@ -53,23 +86,48 @@ function WordCloudGenerator() {
       });
     } finally {
       setIsLoading(false);
+      setUploadProgress(0);
+      setProcessingStep("");
     }
   };
 
-  const handleDownload = () => {
-    if (wordCloudData?.wordcloud_base64) {
-      const link = document.createElement("a");
+  const handleDownload = async () => {
+    if (!wordCloudData?.wordcloud_base64) return;
+    
+    setIsDownloading(true);
+    
+    try {
+      addNotification({
+        type: "loading",
+        message: "Preparing download...",
+        duration: 2000,
+      });
+      
+      // Simulate download preparation time
+      await new Promise(resolve => setTimeout(resolve, 800));
+      
+      const link = document.createElement('a');
       link.href = `data:image/png;base64,${wordCloudData.wordcloud_base64}`;
-      link.download = "wordcloud.png";
+      link.download = `wordcloud-${Date.now()}.png`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
       
       addNotification({
         type: "success",
-        message: "Word cloud downloaded successfully",
+        title: "Download Complete!",
+        message: "Word cloud image saved successfully",
         duration: 3000,
       });
+    } catch (err) {
+      addNotification({
+        type: "error",
+        title: "Download Failed",
+        message: "Failed to download the word cloud image",
+        duration: 5000,
+      });
+    } finally {
+      setIsDownloading(false);
     }
   };
 
@@ -93,11 +151,18 @@ function WordCloudGenerator() {
               </div>
             </div>
             <div className="flex items-center space-x-4">
-              <LanguageSelector
-                selectedLanguage={selectedLanguage}
-                onLanguageChange={setSelectedLanguage}
-                disabled={isLoading}
-              />
+              <div className={`${isLoading ? 'opacity-50 pointer-events-none' : ''}`}>
+                <LanguageSelector
+                  selectedLanguage={selectedLanguage}
+                  onLanguageChange={setSelectedLanguage}
+                  className="w-full"
+                />
+                {isLoading && (
+                  <p className="text-xs text-gray-500 dark:text-gray-400 mt-2">
+                    Language selection disabled during processing
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -118,9 +183,14 @@ function WordCloudGenerator() {
               </div>
               <FileUpload
                 onFileSelect={handleFileSelect}
+                accept={{
+                  'text/plain': ['.txt'],
+                  'application/pdf': ['.pdf'],
+                  'application/vnd.openxmlformats-officedocument.wordprocessingml.document': ['.docx']
+                }}
+                maxSize={10 * 1024 * 1024} // 10MB
+                className="mb-6"
                 disabled={isLoading}
-                accept={{ "text/*": [".txt"] }}
-                maxSize={5 * 1024 * 1024}
               />
             </div>
 
@@ -155,11 +225,48 @@ function WordCloudGenerator() {
               </div>
               
               {isLoading && (
-                 <div className="flex items-center justify-center py-12">
+                 <div className="flex flex-col items-center justify-center py-12 space-y-4">
                    <Loading 
-                     message="Generating your word cloud..."
+                     message={processingStep || "Generating your word cloud..."}
                      variant="processing"
                    />
+                   
+                   {/* Progress Bar */}
+                   <div className="w-full max-w-md">
+                     <div className="flex justify-between text-sm text-gray-600 dark:text-gray-400 mb-2">
+                       <span>{processingStep}</span>
+                       <span>{uploadProgress}%</span>
+                     </div>
+                     <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                       <div 
+                         className="bg-blue-500 h-2 rounded-full transition-all duration-300 ease-out"
+                         style={{ width: `${uploadProgress}%` }}
+                       />
+                     </div>
+                   </div>
+                   
+                   {/* Processing Steps Indicator */}
+                   <div className="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+                     <div className={`w-2 h-2 rounded-full ${
+                       uploadProgress >= 10 ? 'bg-green-500' : 'bg-gray-300'
+                     }`} />
+                     <span>Validate</span>
+                     
+                     <div className={`w-2 h-2 rounded-full ${
+                       uploadProgress >= 50 ? 'bg-green-500' : 'bg-gray-300'
+                     }`} />
+                     <span>Upload</span>
+                     
+                     <div className={`w-2 h-2 rounded-full ${
+                       uploadProgress >= 70 ? 'bg-green-500' : 'bg-gray-300'
+                     }`} />
+                     <span>Analyze</span>
+                     
+                     <div className={`w-2 h-2 rounded-full ${
+                       uploadProgress >= 90 ? 'bg-green-500' : 'bg-gray-300'
+                     }`} />
+                     <span>Generate</span>
+                   </div>
                  </div>
                )}
               
@@ -174,23 +281,66 @@ function WordCloudGenerator() {
                )}
               
               {wordCloudData && !isLoading && (
-                <WordCloudDisplay
-                  imageData={wordCloudData.wordcloud_base64}
-                  alt="Generated Word Cloud"
-                  onDownload={handleDownload}
-                  className="w-full"
-                />
+                <div className="space-y-4">
+                  <WordCloudDisplay
+                    imageData={wordCloudData.wordcloud_base64}
+                    alt="Generated Word Cloud"
+                    onDownload={handleDownload}
+                    className="w-full"
+                  />
+                  
+                  {/* Enhanced Download Section */}
+                  <div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div className="flex items-center space-x-3">
+                      <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse" />
+                      <span className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        Word cloud ready for download
+                      </span>
+                    </div>
+                    
+                    <button
+                      onClick={handleDownload}
+                      disabled={isDownloading}
+                      className={`inline-flex items-center px-4 py-2 text-sm font-medium rounded-md transition-all duration-200 ${
+                        isDownloading
+                          ? 'bg-gray-300 text-gray-500 cursor-not-allowed'
+                          : 'bg-blue-600 hover:bg-blue-700 text-white hover:shadow-md'
+                      }`}
+                    >
+                      {isDownloading ? (
+                        <>
+                          <div className="animate-spin -ml-1 mr-2 h-4 w-4 border-2 border-gray-500 border-t-transparent rounded-full" />
+                          Downloading...
+                        </>
+                      ) : (
+                        <>
+                          <svg className="-ml-1 mr-2 h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                          </svg>
+                          Download PNG
+                        </>
+                      )}
+                    </button>
+                  </div>
+                </div>
               )}
               
               {!wordCloudData && !isLoading && !error && (
                 <div className="flex flex-col items-center justify-center py-12 text-center">
-                  <Cloud className="h-16 w-16 text-gray-300 dark:text-gray-600 mb-4" />
+                  <div className="relative">
+                    <Cloud className="h-16 w-16 text-gray-300 dark:text-gray-600 mb-4" />
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-500 rounded-full animate-pulse" />
+                  </div>
                   <h3 className="text-lg font-medium text-gray-900 dark:text-white mb-2">
-                    No Word Cloud Yet
+                    Ready to Create
                   </h3>
-                  <p className="text-gray-600 dark:text-gray-400 max-w-sm">
+                  <p className="text-gray-600 dark:text-gray-400 max-w-sm mb-4">
                     Upload a text file to generate your personalized word cloud visualization.
                   </p>
+                  <div className="flex items-center space-x-2 text-sm text-green-600 dark:text-green-400">
+                    <div className="w-2 h-2 bg-green-500 rounded-full" />
+                    <span>System ready</span>
+                  </div>
                 </div>
               )}
             </div>
