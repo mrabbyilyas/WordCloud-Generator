@@ -23,10 +23,10 @@ export default function Home() {
   // Memoize callback functions to prevent unnecessary re-renders
   const handleWordHover = useCallback((word: any) => {
     setHoveredWord(word);
-    if (word && !hasBeenHovered) {
-      setHasBeenHovered(true);
+    if (word) {
+      setHasBeenHovered(prev => prev || true);
     }
-  }, [hasBeenHovered]);
+  }, []); // Remove hasBeenHovered dependency to prevent re-renders
 
   const handleWordClick = useCallback((word: any) => {
     // Handle word click if needed
@@ -38,19 +38,43 @@ export default function Home() {
       return [];
     }
     
-    // Simplified and more robust deduplicate logic
+    console.log('Original word_frequencies:', wordCloudData.word_frequencies);
+    
+    // Enhanced deduplication logic with better word cleaning
     const deduplicatedFreqs: { [key: string]: number } = {};
+    const processedWords: string[] = [];
     
     Object.entries(wordCloudData.word_frequencies).forEach(([word, frequency]: [string, any]) => {
-      // Clean word: remove all non-alphabetic characters, convert to lowercase, trim
-      const cleanWord = word.replace(/[^a-zA-Z]/g, '').toLowerCase().trim();
+      // More precise word cleaning: trim, lowercase, remove only punctuation but keep letters
+      let cleanWord = word.trim().toLowerCase();
       
-      // Filter out very short words and non-alphabetic words
-      if (cleanWord.length >= 3 && /^[a-zA-Z]+$/.test(cleanWord)) {
+      // Remove common punctuation but preserve letters and numbers if needed
+      cleanWord = cleanWord.replace(/[.,;:!?"'()\[\]{}]/g, '');
+      
+      // Remove any remaining non-letter characters except hyphens and apostrophes in valid positions
+      cleanWord = cleanWord.replace(/[^a-zA-Z'-]/g, '');
+      
+      // Clean up multiple hyphens or apostrophes
+      cleanWord = cleanWord.replace(/[-']{2,}/g, '');
+      
+      // Remove leading/trailing hyphens or apostrophes
+      cleanWord = cleanWord.replace(/^[-']+|[-']+$/g, '');
+      
+      // Final trim
+      cleanWord = cleanWord.trim();
+      
+      // Filter out very short words, empty words, and ensure it's mostly alphabetic
+      if (cleanWord.length >= 3 && /^[a-zA-Z][a-zA-Z'-]*[a-zA-Z]$|^[a-zA-Z]{3,}$/.test(cleanWord)) {
+        processedWords.push(`${word} -> ${cleanWord}`);
+        
         // Always accumulate frequency for the same clean word
-        deduplicatedFreqs[cleanWord] = (deduplicatedFreqs[cleanWord] || 0) + (typeof frequency === 'number' ? frequency : 1);
+        const freq = typeof frequency === 'number' ? frequency : 1;
+        deduplicatedFreqs[cleanWord] = (deduplicatedFreqs[cleanWord] || 0) + freq;
       }
     });
+    
+    console.log('Processed words mapping:', processedWords);
+    console.log('Final deduplicated frequencies:', deduplicatedFreqs);
     
     // Convert to final array format with guaranteed uniqueness
     const finalWords = Object.entries(deduplicatedFreqs).map(([word, frequency]) => ({
@@ -59,12 +83,31 @@ export default function Home() {
       frequency: frequency
     }));
     
-    return finalWords.sort((a, b) => b.frequency - a.frequency); // Sort by frequency descending
-  }, [wordCloudData?.word_frequencies]);
+    const sortedWords = finalWords.sort((a, b) => b.frequency - a.frequency);
+    console.log('Final words for visualization:', sortedWords);
+    
+    return sortedWords;
+  }, [JSON.stringify(wordCloudData?.word_frequencies)]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
-    if (file && file.type === "text/plain") {
+    if (file) {
+      // Clear previous errors
+      setError(null);
+      
+      // Check file type
+      if (file.type !== "text/plain" && !file.name.toLowerCase().endsWith('.txt')) {
+        setError(`Invalid file type. Please upload a .txt file only. Selected file: ${file.name}`);
+        return;
+      }
+      
+      // Check file size (optional: limit to 10MB)
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSize) {
+        setError(`File too large. Please upload a file smaller than 10MB. Current size: ${(file.size / 1024 / 1024).toFixed(1)}MB`);
+        return;
+      }
+      
       setSelectedFile(file);
     }
   };
@@ -86,9 +129,24 @@ export default function Home() {
     const files = event.dataTransfer.files;
     if (files.length > 0) {
       const file = files[0];
-      if (file.type === "text/plain") {
-        setSelectedFile(file);
+      
+      // Clear previous errors
+      setError(null);
+      
+      // Check file type
+      if (file.type !== "text/plain" && !file.name.toLowerCase().endsWith('.txt')) {
+        setError(`Invalid file type. Please upload a .txt file only. Selected file: ${file.name}`);
+        return;
       }
+      
+      // Check file size (optional: limit to 10MB)
+      const maxSize = 10 * 1024 * 1024; // 10MB
+      if (file.size > maxSize) {
+        setError(`File too large. Please upload a file smaller than 10MB. Current size: ${(file.size / 1024 / 1024).toFixed(1)}MB`);
+        return;
+      }
+      
+      setSelectedFile(file);
     }
   };
 
@@ -209,6 +267,9 @@ export default function Home() {
                       <p className="text-sm text-muted-foreground">
                         {isDragOver ? "Release to upload" : "or drag and drop your .txt file here"}
                       </p>
+                      <p className="text-xs text-muted-foreground mt-2">
+                        Only .txt files are supported (max 10MB)
+                      </p>
                     </div>
                     <input
                       type="file"
@@ -289,13 +350,34 @@ export default function Home() {
                 
                 <div className="bg-muted rounded-lg p-4">
                   {memoizedWords.length > 0 ? (
-                    <WordCloudVisualization
-                      words={memoizedWords}
-                      width={Math.min(750, typeof window !== 'undefined' ? window.innerWidth - 150 : 750)}
-                      height={400}
-                      onWordHover={handleWordHover}
-                      onWordClick={handleWordClick}
-                    />
+                    (() => {
+                      console.log('=== RENDERING WordCloudVisualization ===');
+                      console.log('memoizedWords length:', memoizedWords.length);
+                      console.log('memoizedWords data:', memoizedWords);
+                      console.log('Unique words check:', new Set(memoizedWords.map(w => w.text)).size);
+                      console.log('Words with same text:', memoizedWords.reduce((acc: Array<{text: string, count: number, instances: any[]}>, word) => {
+                         const existing = acc.find(w => w.text === word.text);
+                         if (existing) {
+                           existing.count++;
+                           existing.instances.push(word);
+                         } else {
+                           acc.push({ text: word.text, count: 1, instances: [word] });
+                         }
+                         return acc;
+                       }, []).filter(w => w.count > 1));
+                      console.log('==========================================');
+                      
+                      return (
+                        <WordCloudVisualization
+                          key={`wordcloud-${memoizedWords.length}-${JSON.stringify(memoizedWords.slice(0, 3).map(w => w.text))}`}
+                          words={memoizedWords}
+                          width={Math.min(750, typeof window !== 'undefined' ? window.innerWidth - 150 : 750)}
+                          height={400}
+                          onWordHover={handleWordHover}
+                          onWordClick={handleWordClick}
+                        />
+                      );
+                    })()
                   ) : (
                     <div className="text-center py-8">
                       <p className="text-muted-foreground mb-4">No word data available for visualization</p>

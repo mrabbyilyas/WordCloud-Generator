@@ -27,17 +27,49 @@ export function WordCloudVisualization({
 }: WordCloudVisualizationProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [isLoading, setIsLoading] = useState(true);
+  const layoutRef = useRef<any>(null);
+  const isProcessingRef = useRef(false);
 
   useEffect(() => {
+    console.log('=== WordCloudVisualization useEffect ===');
+    console.log('Received words:', words);
+    console.log('Words length:', words?.length || 0);
+    
+    // Prevent multiple simultaneous processing
+    if (isProcessingRef.current) {
+      console.log('Already processing, skipping...');
+      return;
+    }
+    
     if (!words || words.length === 0 || !svgRef.current) {
+      console.log('No words provided, returning early');
       setIsLoading(false);
       return;
     }
 
+    console.log('Checking for duplicate words in visualization:');
+     const duplicateCheck = words.reduce((acc: Array<{text: string, indices: number[], instances: any[]}>, word, index) => {
+       const existing = acc.find(w => w.text === word.text);
+       if (existing) {
+         existing.indices.push(index);
+         existing.instances.push(word);
+       } else {
+         acc.push({ text: word.text, indices: [index], instances: [word] });
+       }
+       return acc;
+     }, []).filter(w => w.indices.length > 1);
+    
+    console.log('Duplicate words found:', duplicateCheck);
+    console.log('Unique words count:', new Set(words.map(w => w.text)).size);
+    console.log('Total words count:', words.length);
 
+    isProcessingRef.current = true;
     setIsLoading(true);
 
-    // Clear previous content
+    // Clear previous content and stop any existing layout
+    if (layoutRef.current) {
+      layoutRef.current.stop();
+    }
     d3.select(svgRef.current).selectAll("*").remove();
 
     // Create color scale
@@ -73,10 +105,14 @@ export function WordCloudVisualization({
         // Word positioned callback
       });
 
+    // Store layout reference for cleanup
+    layoutRef.current = layout;
+
     try {
       layout.start();
     } catch (error) {
       console.error('Error starting word cloud layout:', error);
+      isProcessingRef.current = false;
       setIsLoading(false);
     }
 
@@ -84,6 +120,7 @@ export function WordCloudVisualization({
       
       if (!layoutWords || layoutWords.length === 0) {
         console.warn('No words to draw');
+        isProcessingRef.current = false;
         setIsLoading(false);
         return;
       }
@@ -148,11 +185,18 @@ export function WordCloudVisualization({
         .duration(1000)
         .style("opacity", 1)
         .on("end", () => {
+          isProcessingRef.current = false;
           setIsLoading(false);
         });
-
-
     }
+    
+    // Cleanup function
+    return () => {
+      if (layoutRef.current) {
+        layoutRef.current.stop();
+      }
+      isProcessingRef.current = false;
+    };
   }, [words, width, height]);
 
   return (
