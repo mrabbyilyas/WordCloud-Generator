@@ -33,6 +33,7 @@ export function WordCloudVisualization({
 }: WordCloudVisualizationProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [isLoading, setIsLoading] = useState(true);
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const layoutRef = useRef<any>(null);
   const isProcessingRef = useRef(false);
 

@@ -8,6 +8,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Upload, FileText, X, CheckCircle, Loader2, ExternalLink } from "lucide-react";
 import { WordCloudVisualization } from "@/components/ui/wordcloud-visualization";
+import { AnalyticsDashboard } from "@/components/ui/analytics-dashboard";
 
 export default function Home() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
@@ -234,7 +235,8 @@ export default function Home() {
             default:
               errorMessage = `Server error (${response.status}): ${errorText || 'Unknown error'}`;
           }
-        } catch (parseError) {
+        // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (_parseError) {
           errorMessage = `Server error (${response.status}): Unable to parse error response`;
         }
         
@@ -470,7 +472,7 @@ export default function Home() {
                       console.log('memoizedWords length:', memoizedWords.length);
                       console.log('memoizedWords data:', memoizedWords);
                       console.log('Unique words check:', new Set(memoizedWords.map(w => w.text)).size);
-                      console.log('Words with same text:', memoizedWords.reduce((acc: Array<{text: string, count: number, instances: any[]}>, word) => {
+                      console.log('Words with same text:', memoizedWords.reduce((acc: Array<{text: string, count: number, instances: Array<{text: string, size: number}>}>, word) => {
                          const existing = acc.find(w => w.text === word.text);
                          if (existing) {
                            existing.count++;
@@ -521,6 +523,15 @@ export default function Home() {
                 )}
               </CardContent>
             </Card>
+
+            {/* Analytics Dashboard */}
+            <div className="mt-8">
+              <AnalyticsDashboard 
+                words={memoizedWords}
+                selectedLanguage={selectedLanguage}
+                originalText={selectedFile ? "Sample text from uploaded file" : undefined}
+              />
+            </div>
           </div>
         )}
        </div>
