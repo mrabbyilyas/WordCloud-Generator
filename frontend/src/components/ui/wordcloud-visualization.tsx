@@ -8,6 +8,10 @@ interface WordData {
   text: string;
   size: number;
   frequency?: number;
+  x?: number;
+  y?: number;
+  rotate?: number;
+  index?: number;
 }
 
 interface WordCloudVisualizationProps {
@@ -50,7 +54,7 @@ export function WordCloudVisualization({
     }
 
     console.log('Checking for duplicate words in visualization:');
-     const duplicateCheck = words.reduce((acc: Array<{text: string, indices: number[], instances: any[]}>, word, index) => {
+     const duplicateCheck = words.reduce((acc: Array<{text: string, indices: number[], instances: WordData[]}>, word, index) => {
        const existing = acc.find(w => w.text === word.text);
        if (existing) {
          existing.indices.push(index);
@@ -103,7 +107,7 @@ export function WordCloudVisualization({
       .random(() => 0.5) // Fixed random seed for consistent layout
       .timeInterval(20) // More time for optimal positioning to reduce collision
       .on("end", draw)
-      .on("word", (word) => {
+      .on("word", () => {
         // Word positioned callback
       });
 
@@ -123,7 +127,7 @@ export function WordCloudVisualization({
       }
     }
 
-    function draw(layoutWords: any[]) {
+    function draw(layoutWords: WordData[]) {
       
       if (!layoutWords || layoutWords.length === 0) {
         console.warn('No words to draw');
@@ -201,7 +205,7 @@ export function WordCloudVisualization({
             onWordHover(d as WordData);
           }
         })
-        .on("mouseout", function(event, d) {
+        .on("mouseout", function() {
           d3.select(this)
             .transition()
             .duration(200)
@@ -232,7 +236,7 @@ export function WordCloudVisualization({
       }
       isProcessingRef.current = false;
     };
-  }, [words, width, height]);
+  }, [words, width, height, onWordHover, onWordClick, onError]);
 
   return (
     <div className="w-full flex justify-center relative">

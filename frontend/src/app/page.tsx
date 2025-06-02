@@ -1,6 +1,5 @@
 "use client";
-import { useState, useRef, useCallback, useMemo } from "react";
-import Image from "next/image";
+import { useState, useCallback, useMemo } from "react";
 import Particles from "@/components/ui/particles";
 import { SmoothCursor } from "@/components/ui/smooth-cursor";
 import { TextAnimate } from "@/components/ui/text-animate";
@@ -17,20 +16,21 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [wordCloudData, setWordCloudData] = useState<any>(null);
+  const [wordCloudData, setWordCloudData] = useState<{word_frequencies: {[key: string]: number}} | null>(null);
   const [hoveredWord, setHoveredWord] = useState<{text: string; frequency?: number} | null>(null);
   const [hasBeenHovered, setHasBeenHovered] = useState(false);
 
   // Memoize callback functions to prevent unnecessary re-renders
-  const handleWordHover = useCallback((word: any) => {
+  const handleWordHover = useCallback((word: {text: string; frequency?: number} | null) => {
     setHoveredWord(word);
     if (word) {
-      setHasBeenHovered(prev => prev || true);
+      setHasBeenHovered(true);
     }
-  }, []); // Remove hasBeenHovered dependency to prevent re-renders
+  }, []);
 
-  const handleWordClick = useCallback((word: any) => {
+  const handleWordClick = useCallback((word: {text: string; frequency?: number}) => {
     // Handle word click if needed
+    console.log('Word clicked:', word);
   }, []);
 
   const handleWordCloudError = useCallback((errorMessage: string) => {
@@ -50,7 +50,7 @@ export default function Home() {
     const deduplicatedFreqs: { [key: string]: number } = {};
     const processedWords: string[] = [];
     
-    Object.entries(wordCloudData.word_frequencies).forEach(([word, frequency]: [string, any]) => {
+    Object.entries(wordCloudData.word_frequencies).forEach(([word, frequency]: [string, number]) => {
       // More precise word cleaning: trim, lowercase, remove only punctuation but keep letters
       let cleanWord = word.trim().toLowerCase();
       
@@ -93,7 +93,7 @@ export default function Home() {
     console.log('Final words for visualization:', sortedWords);
     
     return sortedWords;
-  }, [JSON.stringify(wordCloudData?.word_frequencies)]);
+  }, [wordCloudData]);
 
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
