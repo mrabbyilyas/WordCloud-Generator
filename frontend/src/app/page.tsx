@@ -7,7 +7,7 @@ import { TextAnimate } from "@/components/ui/text-animate";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, FileText, X, CheckCircle, Loader2 } from "lucide-react";
+import { Upload, FileText, X, CheckCircle, Loader2, ExternalLink } from "lucide-react";
 import { WordCloudVisualization } from "@/components/ui/wordcloud-visualization";
 
 export default function Home() {
@@ -524,6 +524,37 @@ export default function Home() {
           </div>
         )}
        </div>
+
+      {/* Creator Attribution */}
+      <div className="fixed bottom-4 right-4 z-50">
+        <div className="bg-white/90 backdrop-blur-sm border border-gray-200 rounded-lg p-3 shadow-lg hover:shadow-xl transition-all duration-300 group">
+          <a 
+            href="https://www.linkedin.com/in/rabbyilyas/" 
+            target="_blank" 
+            rel="noopener noreferrer"
+            className="flex items-center space-x-3 text-gray-700 hover:text-blue-600 transition-colors duration-200"
+          >
+            <div className="relative">
+              <img 
+                src="/images/Casual_rabby.jpg" 
+                alt="Creator Profile" 
+                className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 group-hover:border-blue-400 transition-colors duration-200"
+                onError={(e) => {
+                  const target = e.target as HTMLImageElement;
+                  target.src = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPGNpcmNsZSBjeD0iMjAiIGN5PSIyMCIgcj0iMjAiIGZpbGw9IiNGM0Y0RjYiLz4KPHN2ZyB4PSI4IiB5PSI4IiB3aWR0aD0iMjQiIGhlaWdodD0iMjQiIHZpZXdCb3g9IjAgMCAyNCAyNCIgZmlsbD0ibm9uZSIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj4KPHBhdGggZD0iTTIwIDIxdi0yYTQgNCAwIDAgMC00LTRIOGE0IDQgMCAwIDAtNCA0djIiIHN0cm9rZT0iIzlDQTNBRiIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KPGNpcmNsZSBjeD0iMTIiIGN5PSI3IiByPSI0IiBzdHJva2U9IiM5Q0EzQUYiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIi8+Cjwvc3ZnPgo8L3N2Zz4K';
+                }}
+              />
+              <div className="absolute -bottom-1 -right-1 w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center">
+                <ExternalLink className="w-2.5 h-2.5 text-white" />
+              </div>
+            </div>
+            <div className="text-sm">
+              <p className="font-medium leading-tight">Created by</p>
+              <p className="text-blue-600 font-semibold leading-tight">M Rabby Ilyas</p>
+            </div>
+          </a>
+        </div>
+      </div>
     </div>
   );
 }
