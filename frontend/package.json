@@ -6,7 +6,15 @@
     "dev": "next dev --turbopack",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "type-check": "tsc --noEmit",
+    "lint:fix": "next lint --fix",
+    "build:analyze": "ANALYZE=true npm run build",
+    "preview": "npm run build && npm run start",
+    "clean": "rm -rf .next out",
+    "deploy": "vercel",
+    "deploy:prod": "vercel --prod",
+    "postbuild": "echo 'Build completed successfully!'"
   },
   "dependencies": {
     "@radix-ui/react-select": "^2.2.5",
