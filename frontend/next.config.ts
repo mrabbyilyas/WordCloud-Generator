@@ -1,10 +1,15 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // Output configuration for Docker
+  output: 'standalone',
+  
   // Image optimization
   images: {
     domains: ['localhost'],
     formats: ['image/webp', 'image/avif'],
+    deviceSizes: [640, 750, 828, 1080, 1200, 1920, 2048, 3840],
+    imageSizes: [16, 32, 48, 64, 96, 128, 256, 384],
   },
   
   // Compression
@@ -15,8 +20,6 @@ const nextConfig: NextConfig = {
     optimizePackageImports: ['lucide-react', 'd3', 'motion'],
   },
   
-  // Build optimizations
-  swcMinify: true,
   
   // Headers for security and performance
   async headers() {

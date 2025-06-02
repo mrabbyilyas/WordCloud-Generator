@@ -14,6 +14,13 @@
     "clean": "rm -rf .next out",
     "deploy": "vercel",
     "deploy:prod": "vercel --prod",
+    "docker:build": "docker build -t wordcloud-frontend .",
+    "docker:run": "docker run -p 3000:3000 wordcloud-frontend",
+    "docker:dev": "docker-compose up --build",
+    "docker:prod": "docker-compose up --build -d",
+    "docker:stop": "docker-compose down",
+    "docker:logs": "docker-compose logs -f frontend",
+    "docker:clean": "docker system prune -f",
     "postbuild": "echo 'Build completed successfully!'"
   },
   "dependencies": {
