@@ -32,6 +32,10 @@ export default function Home() {
     // Handle word click if needed
   }, []);
 
+  const handleWordCloudError = useCallback((errorMessage: string) => {
+    setError(`Word cloud rendering error: ${errorMessage}`);
+  }, []);
+
   // Memoize words array to prevent unnecessary re-renders
   const memoizedWords = useMemo(() => {
     if (!wordCloudData?.word_frequencies || typeof wordCloudData.word_frequencies !== 'object' || Object.keys(wordCloudData.word_frequencies).length === 0) {
@@ -157,7 +161,10 @@ export default function Home() {
   };
 
   const generateWordCloud = async () => {
-    if (!selectedFile) return;
+    if (!selectedFile) {
+      setError('Please select a file first.');
+      return;
+    }
 
     setIsLoading(true);
     setError(null);
@@ -174,29 +181,83 @@ export default function Home() {
         language: selectedLanguage
       });
 
+      // Add timeout for the request
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
       const response = await fetch('https://mrabbyilyas-wordcloud-generator.hf.space/upload', {
         method: 'POST',
         body: formData,
+        signal: controller.signal,
         headers: {
           // Don't set Content-Type header for FormData, let browser set it with boundary
         },
       });
 
+      clearTimeout(timeoutId);
       console.log('Response status:', response.status);
       console.log('Response headers:', Object.fromEntries(response.headers.entries()));
 
       if (!response.ok) {
-        const errorText = await response.text();
-        console.error('Error response:', errorText);
-        throw new Error(`HTTP error! status: ${response.status} - ${errorText}`);
+        let errorMessage = 'Failed to generate word cloud';
+        
+        try {
+          const errorText = await response.text();
+          console.error('Error response:', errorText);
+          
+          // Provide specific error messages based on status code
+          switch (response.status) {
+            case 400:
+              errorMessage = 'Invalid file or request. Please check your file format and try again.';
+              break;
+            case 413:
+              errorMessage = 'File is too large. Please upload a smaller file.';
+              break;
+            case 415:
+              errorMessage = 'Unsupported file type. Please upload a .txt file only.';
+              break;
+            case 429:
+              errorMessage = 'Too many requests. Please wait a moment and try again.';
+              break;
+            case 500:
+              errorMessage = 'Server error. Please try again later.';
+              break;
+            case 503:
+              errorMessage = 'Service temporarily unavailable. Please try again later.';
+              break;
+            default:
+              errorMessage = `Server error (${response.status}): ${errorText || 'Unknown error'}`;
+          }
+        } catch (parseError) {
+          errorMessage = `Server error (${response.status}): Unable to parse error response`;
+        }
+        
+        throw new Error(errorMessage);
       }
 
       const data = await response.json();
       console.log('Response data:', data);
+      
+      // Validate response data
+      if (!data || !data.word_frequencies || Object.keys(data.word_frequencies).length === 0) {
+        throw new Error('No words found in the uploaded file. Please upload a file with more text content.');
+      }
+      
       setWordCloudData(data);
     } catch (err) {
       console.error('Full error:', err);
-      setError(err instanceof Error ? err.message : 'An error occurred while generating word cloud');
+      
+      if (err instanceof Error) {
+        if (err.name === 'AbortError') {
+          setError('Request timed out. Please check your internet connection and try again.');
+        } else if (err.message.includes('Failed to fetch') || err.message.includes('NetworkError')) {
+          setError('Network error. Please check your internet connection and try again.');
+        } else {
+          setError(err.message);
+        }
+      } else {
+        setError('An unexpected error occurred while generating word cloud. Please try again.');
+      }
     } finally {
       setIsLoading(false);
     }
@@ -335,9 +396,18 @@ export default function Home() {
 
         {/* Error Message */}
         {error && (
-          <div className="mt-8 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-center">
-            <p className="font-medium">Error:</p>
-            <p>{error}</p>
+          <div className="mt-8 p-4 bg-red-50 border border-red-200 rounded-lg text-red-700 text-center max-w-2xl mx-auto">
+            <div className="flex items-center justify-center mb-2">
+              <X className="w-5 h-5 mr-2 text-red-500" />
+              <p className="font-semibold text-red-800">Error</p>
+            </div>
+            <p className="text-sm leading-relaxed">{error}</p>
+            <button 
+              onClick={() => setError(null)}
+              className="mt-3 px-4 py-2 text-xs bg-red-100 hover:bg-red-200 text-red-700 rounded-md transition-colors duration-200"
+            >
+              Dismiss
+            </button>
           </div>
         )}
 
@@ -375,6 +445,7 @@ export default function Home() {
                           height={400}
                           onWordHover={handleWordHover}
                           onWordClick={handleWordClick}
+                          onError={handleWordCloudError}
                         />
                       );
                     })()

@@ -16,6 +16,7 @@ interface WordCloudVisualizationProps {
   height?: number;
   onWordClick?: (word: WordData) => void;
   onWordHover?: (word: WordData | null) => void;
+  onError?: (error: string) => void;
 }
 
 export function WordCloudVisualization({
@@ -24,6 +25,7 @@ export function WordCloudVisualization({
   height = 400,
   onWordClick,
   onWordHover,
+  onError,
 }: WordCloudVisualizationProps) {
   const svgRef = useRef<SVGSVGElement>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -112,8 +114,13 @@ export function WordCloudVisualization({
       layout.start();
     } catch (error) {
       console.error('Error starting word cloud layout:', error);
-      isProcessingRef.current = false;
       setIsLoading(false);
+      isProcessingRef.current = false;
+      
+      // Send error to parent component
+      if (onError) {
+        onError(error instanceof Error ? error.message : 'Failed to render word cloud');
+      }
     }
 
     function draw(layoutWords: any[]) {
