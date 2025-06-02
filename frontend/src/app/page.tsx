@@ -7,7 +7,7 @@ import { TextAnimate } from "@/components/ui/text-animate";
 import { ShimmerButton } from "@/components/ui/shimmer-button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Upload, FileText, X } from "lucide-react";
+import { Upload, FileText, X, CheckCircle, Loader2 } from "lucide-react";
 import { WordCloudVisualization } from "@/components/ui/wordcloud-visualization";
 
 export default function Home() {
@@ -16,6 +16,7 @@ export default function Home() {
   const [isDragOver, setIsDragOver] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [wordCloudData, setWordCloudData] = useState<any>(null);
   const [hoveredWord, setHoveredWord] = useState<{text: string; frequency?: number} | null>(null);
   const [hasBeenHovered, setHasBeenHovered] = useState(false);
@@ -34,6 +35,7 @@ export default function Home() {
 
   const handleWordCloudError = useCallback((errorMessage: string) => {
     setError(`Word cloud rendering error: ${errorMessage}`);
+    setSuccessMessage(null); // Clear success message when error occurs
   }, []);
 
   // Memoize words array to prevent unnecessary re-renders
@@ -96,8 +98,9 @@ export default function Home() {
   const handleFileUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
     if (file) {
-      // Clear previous errors
+      // Clear previous messages
       setError(null);
+      setSuccessMessage(null);
       
       // Check file type
       if (file.type !== "text/plain" && !file.name.toLowerCase().endsWith('.txt')) {
@@ -134,8 +137,9 @@ export default function Home() {
     if (files.length > 0) {
       const file = files[0];
       
-      // Clear previous errors
+      // Clear previous messages
       setError(null);
+      setSuccessMessage(null);
       
       // Check file type
       if (file.type !== "text/plain" && !file.name.toLowerCase().endsWith('.txt')) {
@@ -157,6 +161,7 @@ export default function Home() {
   const removeFile = () => {
     setSelectedFile(null);
     setError(null);
+    setSuccessMessage(null);
     setWordCloudData(null);
   };
 
@@ -168,6 +173,7 @@ export default function Home() {
 
     setIsLoading(true);
     setError(null);
+    setSuccessMessage(null);
 
     try {
       const formData = new FormData();
@@ -244,6 +250,13 @@ export default function Home() {
       }
       
       setWordCloudData(data);
+      const successMsg = `Word cloud generated successfully! Found ${Object.keys(data.word_frequencies).length} unique words.`;
+      setSuccessMessage(successMsg);
+      
+      // Auto-dismiss success message after 5 seconds
+      setTimeout(() => {
+        setSuccessMessage(null);
+      }, 5000);
     } catch (err) {
       console.error('Full error:', err);
       
@@ -389,10 +402,42 @@ export default function Home() {
             background={selectedFile && !isLoading ? "rgba(0, 0, 0, 1)" : "rgba(100, 100, 100, 0.5)"}
             onClick={generateWordCloud}
           >
-            <Upload className="w-5 h-5 mr-2" />
-            {isLoading ? 'Generating...' : 'Generate Word Cloud'}
+            {isLoading ? (
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+            ) : (
+              <Upload className="w-5 h-5 mr-2" />
+            )}
+            {isLoading ? 'Generating Word Cloud...' : 'Generate Word Cloud'}
           </ShimmerButton>
         </div>
+
+        {/* Loading Status */}
+        {isLoading && (
+          <div className="mt-6 p-4 bg-blue-50 border border-blue-200 rounded-lg text-blue-700 text-center max-w-2xl mx-auto">
+            <div className="flex items-center justify-center mb-2">
+              <Loader2 className="w-5 h-5 mr-2 animate-spin text-blue-500" />
+              <p className="font-semibold text-blue-800">Processing</p>
+            </div>
+            <p className="text-sm leading-relaxed">Analyzing your text and generating word cloud...</p>
+          </div>
+        )}
+
+        {/* Success Message */}
+        {successMessage && (
+          <div className="mt-8 p-4 bg-green-50 border border-green-200 rounded-lg text-green-700 text-center max-w-2xl mx-auto">
+            <div className="flex items-center justify-center mb-2">
+              <CheckCircle className="w-5 h-5 mr-2 text-green-500" />
+              <p className="font-semibold text-green-800">Success</p>
+            </div>
+            <p className="text-sm leading-relaxed">{successMessage}</p>
+            <button 
+              onClick={() => setSuccessMessage(null)}
+              className="mt-3 px-4 py-2 text-xs bg-green-100 hover:bg-green-200 text-green-700 rounded-md transition-colors duration-200"
+            >
+              Dismiss
+            </button>
+          </div>
+        )}
 
         {/* Error Message */}
         {error && (
