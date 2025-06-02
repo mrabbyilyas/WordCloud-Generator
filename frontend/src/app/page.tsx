@@ -353,21 +353,21 @@ export default function Home() {
                     />
                   </label>
                 ) : (
-                  <div className="flex items-center justify-between p-4 bg-muted rounded-lg">
-                    <div className="flex items-center space-x-3">
-                      <FileText className="w-8 h-8 text-primary" />
-                      <div>
-                        <p className="font-medium">{selectedFile.name}</p>
-                        <p className="text-sm text-muted-foreground">
+                  <div className="flex items-center justify-between p-3 sm:p-4 bg-muted rounded-lg">
+                    <div className="flex items-center space-x-2 sm:space-x-3 min-w-0 flex-1">
+                      <FileText className="w-6 h-6 sm:w-8 sm:h-8 text-primary flex-shrink-0" />
+                      <div className="min-w-0 flex-1">
+                        <p className="font-medium text-sm sm:text-base truncate">{selectedFile.name}</p>
+                        <p className="text-xs sm:text-sm text-muted-foreground">
                           {(selectedFile.size / 1024).toFixed(1)} KB
                         </p>
                       </div>
                     </div>
                     <button
                       onClick={removeFile}
-                      className="p-1 hover:bg-background rounded-full transition-colors"
+                      className="p-1.5 sm:p-2 hover:bg-destructive/10 rounded-full transition-colors flex-shrink-0 ml-2"
                     >
-                      <X className="w-5 h-5" />
+                      <X className="w-4 h-4 sm:w-5 sm:h-5 text-destructive" />
                     </button>
                   </div>
                 )}
@@ -377,7 +377,7 @@ export default function Home() {
 
           {/* Select Language Section */}
           <div className="space-y-4">
-            <h3 className="text-xl font-semibold">Select Language</h3>
+            <h3 className="text-lg sm:text-xl font-semibold">Select Language</h3>
             <Card>
               <CardContent className="p-6">
                 <Select value={selectedLanguage} onValueChange={setSelectedLanguage}>

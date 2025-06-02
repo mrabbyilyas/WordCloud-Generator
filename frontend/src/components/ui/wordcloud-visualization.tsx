@@ -162,6 +162,34 @@ export function WordCloudVisualization({
             onWordClick(d as WordData);
           }
         })
+        .on("touchstart", function(event, d) {
+          event.preventDefault();
+          d3.select(this)
+            .transition()
+            .duration(200)
+            .style("opacity", 0.7)
+            .style("text-decoration", "underline");
+          
+          if (onWordHover) {
+            onWordHover(d as WordData);
+          }
+        })
+        .on("touchend", function(event, d) {
+          event.preventDefault();
+          d3.select(this)
+            .transition()
+            .duration(200)
+            .style("opacity", 1)
+            .style("text-decoration", "none");
+          
+          if (onWordClick) {
+            onWordClick(d as WordData);
+          }
+          
+          if (onWordHover) {
+            onWordHover(null);
+          }
+        })
         .on("mouseover", function(event, d) {
           d3.select(this)
             .transition()
