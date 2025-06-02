@@ -4,10 +4,10 @@ import React, { useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { MagicCard } from "@/components/ui/magic-card";
 import NumberTicker from "@/components/ui/number-ticker";
-import { AnimatedList } from "@/components/ui/animated-list";
 import { TextAnimate } from "@/components/ui/text-animate";
 import { Badge } from "@/components/ui/badge";
 import { BarChart3, Globe, Hash, TrendingUp, FileText, Zap } from "lucide-react";
+import { motion } from "motion/react";
 
 interface WordData {
   text: string;
@@ -19,9 +19,10 @@ interface AnalyticsDashboardProps {
   words: WordData[];
   selectedLanguage: string;
   originalText?: string;
+  cleanedText?: string;
 }
 
-export function AnalyticsDashboard({ words, selectedLanguage, originalText }: AnalyticsDashboardProps) {
+export function AnalyticsDashboard({ words, selectedLanguage, originalText, cleanedText }: AnalyticsDashboardProps) {
   const analytics = useMemo(() => {
     if (!words || words.length === 0) {
       return {
@@ -39,7 +40,7 @@ export function AnalyticsDashboard({ words, selectedLanguage, originalText }: An
     const lexicalDiversity = uniqueWords > 0 ? (uniqueWords / totalWords) : 0;
     const averageWordFrequency = uniqueWords > 0 ? (totalWords / uniqueWords) : 0;
     const topWords = words.slice(0, 20).sort((a, b) => b.frequency - a.frequency);
-    const processedTextSample = originalText ? originalText.substring(0, 200) + (originalText.length > 200 ? "..." : "") : "";
+    const processedTextSample = cleanedText || originalText || "";
 
     return {
       totalWords,
@@ -49,7 +50,7 @@ export function AnalyticsDashboard({ words, selectedLanguage, originalText }: An
       topWords,
       processedTextSample
     };
-  }, [words, originalText]);
+  }, [words, originalText, cleanedText]);
 
   const StatCard = ({ icon: Icon, title, value, subtitle, delay = 0 }: {
     icon: React.ElementType;
@@ -92,6 +93,37 @@ export function AnalyticsDashboard({ words, selectedLanguage, originalText }: An
     </MagicCard>
   );
 
+  const LanguageCard = ({ icon: Icon, title, language, delay = 0 }: {
+    icon: React.ElementType;
+    title: string;
+    language: string;
+    delay?: number;
+  }) => (
+    <MagicCard className="p-6 h-full">
+      <div className="flex items-center space-x-4">
+        <div className="p-3 rounded-full bg-primary/10">
+          <Icon className="h-6 w-6 text-primary" />
+        </div>
+        <div className="flex-1">
+          <TextAnimate 
+            animation="fadeIn" 
+            className="text-sm font-medium text-muted-foreground mb-1"
+            delay={delay}
+          >
+            {title}
+          </TextAnimate>
+          <TextAnimate 
+            animation="fadeIn" 
+            className="text-2xl font-bold capitalize"
+            delay={delay + 0.2}
+          >
+            {language}
+          </TextAnimate>
+        </div>
+      </div>
+    </MagicCard>
+  );
+
   const WordRankItem = ({ word, rank, frequency }: { word: string; rank: number; frequency: number }) => (
     <div className="flex items-center justify-between p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
       <div className="flex items-center space-x-3">
@@ -101,7 +133,7 @@ export function AnalyticsDashboard({ words, selectedLanguage, originalText }: An
         <span className="font-medium">{word}</span>
       </div>
       <div className="text-sm text-muted-foreground font-mono">
-        {frequency}x
+        {frequency}
       </div>
     </div>
   );
@@ -125,7 +157,7 @@ export function AnalyticsDashboard({ words, selectedLanguage, originalText }: An
   }
 
   return (
-    <div className="w-full space-y-6">
+    <div className="w-full max-w-4xl mx-auto space-y-6">
       <Card>
         <CardHeader>
           <CardTitle className="flex items-center space-x-2">
@@ -150,11 +182,10 @@ export function AnalyticsDashboard({ words, selectedLanguage, originalText }: An
               subtitle="Distinct terms"
               delay={0.1}
             />
-            <StatCard 
+            <LanguageCard 
               icon={Globe} 
               title="Language Used" 
-              value={0}
-              subtitle={selectedLanguage.charAt(0).toUpperCase() + selectedLanguage.slice(1)}
+              language={selectedLanguage}
               delay={0.2}
             />
           </div>
@@ -187,16 +218,43 @@ export function AnalyticsDashboard({ words, selectedLanguage, originalText }: An
               </CardHeader>
               <CardContent>
                 <div className="space-y-2 max-h-96 overflow-y-auto">
-                  <AnimatedList delay={100}>
+                  <motion.div
+                    initial="hidden"
+                    animate="visible"
+                    variants={{
+                      hidden: { opacity: 0 },
+                      visible: {
+                        opacity: 1,
+                        transition: {
+                          delayChildren: 0.5,
+                          staggerChildren: 0.05
+                        }
+                      }
+                    }}
+                  >
                     {analytics.topWords.map((word, index) => (
-                      <WordRankItem 
+                      <motion.div
                         key={`${word.text}-${index}`}
-                        word={word.text}
-                        rank={index + 1}
-                        frequency={word.frequency}
-                      />
+                        variants={{
+                          hidden: { opacity: 0, y: 20 },
+                          visible: { 
+                            opacity: 1, 
+                            y: 0,
+                            transition: {
+                              duration: 0.3,
+                              ease: "easeOut"
+                            }
+                          }
+                        }}
+                      >
+                        <WordRankItem 
+                          word={word.text}
+                          rank={index + 1}
+                          frequency={word.frequency}
+                        />
+                      </motion.div>
                     ))}
-                  </AnimatedList>
+                  </motion.div>
                 </div>
               </CardContent>
             </Card>
@@ -206,17 +264,17 @@ export function AnalyticsDashboard({ words, selectedLanguage, originalText }: An
               <CardHeader>
                 <CardTitle className="flex items-center space-x-2 text-lg">
                   <FileText className="h-5 w-5" />
-                  <TextAnimate animation="fadeIn" delay={0.6}>Processed Text Sample</TextAnimate>
+                  <TextAnimate animation="fadeIn" delay={0.6}>Cleaned Text</TextAnimate>
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="bg-muted/50 rounded-lg p-4 max-h-96 overflow-y-auto">
                   <TextAnimate 
                     animation="fadeIn" 
-                    className="text-sm leading-relaxed text-muted-foreground"
+                    className="text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap"
                     delay={0.7}
                   >
-                    {analytics.processedTextSample || "No text sample available"}
+                    {analytics.processedTextSample || "No cleaned text available"}
                   </TextAnimate>
                 </div>
               </CardContent>

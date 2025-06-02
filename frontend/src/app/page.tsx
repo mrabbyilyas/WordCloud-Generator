@@ -17,7 +17,12 @@ export default function Home() {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
-  const [wordCloudData, setWordCloudData] = useState<{word_frequencies: {[key: string]: number}} | null>(null);
+  const [wordCloudData, setWordCloudData] = useState<{
+    word_frequencies: {[key: string]: number},
+    cleaned_text?: string,
+    total_words?: number,
+    unique_words?: number
+  } | null>(null);
   const [hoveredWord, setHoveredWord] = useState<{text: string; frequency?: number} | null>(null);
   const [hasBeenHovered, setHasBeenHovered] = useState(false);
 
@@ -460,7 +465,7 @@ export default function Home() {
 
         {/* Word Cloud Result */}
         {wordCloudData && (
-          <div className="mt-8">
+          <div className="mt-8 w-full max-w-4xl mx-auto">
             <Card>
               <CardContent className="p-6">
                 <h3 className="text-xl font-semibold mb-4 text-center">Generated Word Cloud</h3>
@@ -530,6 +535,7 @@ export default function Home() {
                 words={memoizedWords}
                 selectedLanguage={selectedLanguage}
                 originalText={selectedFile ? "Sample text from uploaded file" : undefined}
+                cleanedText={wordCloudData?.cleaned_text}
               />
             </div>
           </div>
