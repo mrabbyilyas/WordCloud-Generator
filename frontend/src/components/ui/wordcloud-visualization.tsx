@@ -129,6 +129,9 @@ export function WordCloudVisualization({
     }
 
     function draw(layoutWords: WordData[]) {
+      console.log('=== DRAW FUNCTION START ===');
+      console.log('layoutWords:', layoutWords);
+      console.log('layoutWords length:', layoutWords?.length);
       
       if (!layoutWords || layoutWords.length === 0) {
         console.warn('No words to draw');
@@ -137,18 +140,37 @@ export function WordCloudVisualization({
         return;
       }
 
+      console.log('svgRef.current:', svgRef.current);
       const svg = d3.select(svgRef.current);
+      console.log('svg selection:', svg);
+      console.log('svg node:', svg.node());
       
       const g = svg
         .append("g")
         .attr("transform", `translate(${width / 2},${height / 2})`);
+      console.log('g selection:', g);
+      console.log('g node:', g.node());
 
-      const text = g
-        .selectAll("text")
-        .data(layoutWords)
-        .enter()
-        .append("text")
-        .style("font-size", d => `${d.size}px`)
+      console.log('Creating text selection...');
+      const textSelection = g.selectAll("text");
+      console.log('textSelection (before data):', textSelection);
+      console.log('textSelection size (before data):', textSelection.size());
+      
+      const textWithData = textSelection.data(layoutWords);
+      console.log('textWithData:', textWithData);
+      console.log('textWithData size:', textWithData.size());
+      
+      const textEnter = textWithData.enter();
+      console.log('textEnter:', textEnter);
+      console.log('textEnter size:', textEnter.size());
+      
+      const text = textEnter.append("text");
+      console.log('text selection after append:', text);
+      console.log('text selection type:', typeof text);
+      console.log('text selection constructor:', text.constructor.name);
+      console.log('text selection methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(text)));
+      
+      text.style("font-size", d => `${d.size}px`)
         .style("font-family", "Arial, sans-serif")
         .style("font-weight", "bold")
         .style("fill", (d, i) => color(d.index?.toString() || i.toString()))
@@ -170,8 +192,6 @@ export function WordCloudVisualization({
         .on("touchstart", function(event, d) {
           event.preventDefault();
           d3.select(this)
-            .transition()
-            .duration(200)
             .style("opacity", 0.7)
             .style("text-decoration", "underline");
           
@@ -182,8 +202,6 @@ export function WordCloudVisualization({
         .on("touchend", function(event, d) {
           event.preventDefault();
           d3.select(this)
-            .transition()
-            .duration(200)
             .style("opacity", 1)
             .style("text-decoration", "none");
           
@@ -197,8 +215,6 @@ export function WordCloudVisualization({
         })
         .on("mouseover", function(event, d) {
           d3.select(this)
-            .transition()
-            .duration(200)
             .style("opacity", 0.7)
             .style("text-decoration", "underline");
           
@@ -208,8 +224,6 @@ export function WordCloudVisualization({
         })
         .on("mouseout", function() {
           d3.select(this)
-            .transition()
-            .duration(200)
             .style("opacity", 1)
             .style("text-decoration", "none");
           
@@ -219,15 +233,49 @@ export function WordCloudVisualization({
         });
 
       // Add entrance animation
-      text
-        .style("opacity", 0)
-        .transition()
-        .duration(1000)
-        .style("opacity", 1)
-        .on("end", () => {
+      console.log('=== ENTRANCE ANIMATION START ===');
+      console.log('text selection before animation:', text);
+      console.log('text selection type:', typeof text);
+      console.log('text selection size:', text.size());
+      console.log('text has style method:', typeof text.style);
+      console.log('text has transition method:', typeof text.transition);
+      console.log('text methods available:', Object.getOwnPropertyNames(text));
+      
+      if (text && typeof text.style === 'function' && typeof text.transition === 'function') {
+        console.log('Starting transition animation...');
+        try {
+          // First set initial opacity
+          text.style("opacity", 0);
+          console.log('Set initial opacity to 0');
+          
+          // Then create transition and animate
+          const transition = text.transition();
+          console.log('Created transition:', transition);
+          console.log('transition type:', typeof transition);
+          console.log('transition has duration:', typeof transition.duration);
+          
+          transition
+            .duration(1000)
+            .style("opacity", 1)
+            .on("end", () => {
+              console.log('Animation completed');
+              isProcessingRef.current = false;
+              setIsLoading(false);
+            });
+        } catch (error) {
+          console.error('Error during animation:', error);
           isProcessingRef.current = false;
           setIsLoading(false);
-        });
+        }
+      } else {
+        console.warn('Text selection is invalid or missing methods');
+        console.log('text:', text);
+        console.log('text.style type:', typeof text?.style);
+        console.log('text.transition type:', typeof text?.transition);
+        // Fallback if text selection is invalid
+        isProcessingRef.current = false;
+        setIsLoading(false);
+      }
     }
     
     // Cleanup function
