@@ -1,6 +1,6 @@
 "use client";
 import { useState, useCallback, useMemo } from "react";
-import Particles from "@/components/ui/particles";
+import { Particles } from "@/components/ui/particles";
 import { SmoothCursor } from "@/components/ui/smooth-cursor";
 import { TextAnimate } from "@/components/ui/text-animate";
 import { ShimmerButton } from "@/components/ui/shimmer-button";

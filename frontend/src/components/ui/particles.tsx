@@ -129,7 +129,7 @@ export const Particles: React.FC<ParticlesProps> = ({
     };
   }, [color]);
 
-  // eslint-disable-next-line react-hooks/exhaustive-deps
+   
   const initCanvas = useCallback(() => {
     resizeCanvas();
     drawParticles();

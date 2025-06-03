@@ -136,7 +136,6 @@ circle.yml
 *.tsbuildinfo
 .eslintrc*
 .prettierrc*
-tsconfig.json
 jest.config.js
 .babelrc
 .editorconfig
