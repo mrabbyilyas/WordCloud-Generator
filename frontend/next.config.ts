@@ -4,6 +4,9 @@ const nextConfig: NextConfig = {
   // Output configuration for Docker
   output: 'standalone',
   
+  // Static file serving configuration
+  trailingSlash: false,
+  
   // Image optimization
   images: {
     domains: ['localhost'],

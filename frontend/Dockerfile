@@ -31,6 +31,12 @@ RUN ls -la tsconfig.json || echo "tsconfig.json not found"
 # Build the application with verbose output
 RUN npm run build
 
+# Copy public folder to standalone build (required for standalone mode)
+RUN cp -r public .next/standalone/public
+
+# Copy static files to standalone build
+RUN cp -r .next/static .next/standalone/.next/static
+
 # Create non-root user
 RUN addgroup --system --gid 1001 nodejs && \
     adduser --system --uid 1001 nextjs

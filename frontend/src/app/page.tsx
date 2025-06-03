@@ -553,7 +553,7 @@ export default function Home() {
           >
             <div className="relative">
               <img 
-                src="/images/Casual_rabby.jpg" 
+                src="/images/Casual_rabby.JPG" 
                 alt="Creator Profile" 
                 className="w-10 h-10 rounded-full object-cover border-2 border-gray-200 group-hover:border-blue-400 transition-colors duration-200"
                 onError={(e) => {
