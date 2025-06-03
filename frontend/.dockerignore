@@ -132,7 +132,6 @@ docker-compose*
 *.tsbuildinfo
 .eslintrc*
 .prettierrc*
-tsconfig.json
 jest.config.js
 .babelrc
 .editorconfig
