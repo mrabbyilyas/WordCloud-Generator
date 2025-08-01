@@ -4,10 +4,12 @@ FROM python:3.12-slim
 # Set working directory
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies and Chinese fonts
 RUN apt-get update && apt-get install -y \
     gcc \
     g++ \
+    fonts-wqy-microhei \
+    fonts-wqy-zenhei \
     && rm -rf /var/lib/apt/lists/*
 
 # Copy requirements first for better caching

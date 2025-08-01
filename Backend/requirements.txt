@@ -7,3 +7,5 @@ wordcloud
 matplotlib
 numpy
 jinja2
+jieba
+zhon
