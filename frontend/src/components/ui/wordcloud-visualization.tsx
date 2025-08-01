@@ -18,6 +18,7 @@ interface WordCloudVisualizationProps {
   words: WordData[];
   width?: number;
   height?: number;
+  language?: string;
   onWordClick?: (word: WordData) => void;
   onWordHover?: (word: WordData | null) => void;
   onError?: (error: string) => void;
@@ -27,6 +28,7 @@ export function WordCloudVisualization({
   words,
   width = 800,
   height = 400,
+  language = "english",
   onWordClick,
   onWordHover,
   onError,
@@ -102,7 +104,7 @@ export function WordCloudVisualization({
         const angles = [0, 0, 0, 90, -90]; // Favor horizontal orientation
         return angles[Math.floor(Math.random() * angles.length)];
       })
-      .font("Arial, sans-serif")
+      .font(language === "chinese" ? "'Noto Sans SC', sans-serif" : "Arial, sans-serif")
       .fontSize(d => d.size || 20)
       .spiral("archimedean") // Back to archimedean for smoother distribution
       .random(() => 0.5) // Fixed random seed for consistent layout
@@ -171,7 +173,7 @@ export function WordCloudVisualization({
       console.log('text selection methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(text)));
       
       text.style("font-size", d => `${d.size}px`)
-        .style("font-family", "Arial, sans-serif")
+        .style("font-family", language === "chinese" ? "'Noto Sans SC', sans-serif" : "Arial, sans-serif")
         .style("font-weight", "bold")
         .style("fill", (d, i) => color(d.index?.toString() || i.toString()))
         .style("cursor", "pointer")
@@ -285,7 +287,7 @@ export function WordCloudVisualization({
       }
       isProcessingRef.current = false;
     };
-  }, [words, width, height, onWordHover, onWordClick, onError]);
+  }, [words, width, height, language, onWordHover, onWordClick, onError]);
 
   return (
     <div className="w-full flex justify-center relative">

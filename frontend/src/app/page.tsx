@@ -57,31 +57,47 @@ export default function Home() {
     const processedWords: string[] = [];
     
     Object.entries(wordCloudData.word_frequencies).forEach(([word, frequency]: [string, number]) => {
-      // More precise word cleaning: trim, lowercase, remove only punctuation but keep letters
-      let cleanWord = word.trim().toLowerCase();
+      // More precise word cleaning: trim, lowercase (for non-Chinese), remove only punctuation
+      let cleanWord = word.trim();
       
-      // Remove common punctuation but preserve letters and numbers if needed
-      cleanWord = cleanWord.replace(/[.,;:!?"'()\[\]{}]/g, '');
+      // Check if word contains Chinese characters
+      const containsChinese = /[\u4e00-\u9fff]/.test(cleanWord);
       
-      // Remove any remaining non-letter characters except hyphens and apostrophes in valid positions
-      cleanWord = cleanWord.replace(/[^a-zA-Z'-]/g, '');
-      
-      // Clean up multiple hyphens or apostrophes
-      cleanWord = cleanWord.replace(/[-']{2,}/g, '');
-      
-      // Remove leading/trailing hyphens or apostrophes
-      cleanWord = cleanWord.replace(/^[-']+|[-']+$/g, '');
-      
-      // Final trim
-      cleanWord = cleanWord.trim();
-      
-      // Filter out very short words, empty words, and ensure it's mostly alphabetic
-      if (cleanWord.length >= 3 && /^[a-zA-Z][a-zA-Z'-]*[a-zA-Z]$|^[a-zA-Z]{3,}$/.test(cleanWord)) {
-        processedWords.push(`${word} -> ${cleanWord}`);
+      if (!containsChinese) {
+        // For non-Chinese words, apply lowercase and existing cleaning
+        cleanWord = cleanWord.toLowerCase();
         
-        // Always accumulate frequency for the same clean word
-        const freq = typeof frequency === 'number' ? frequency : 1;
-        deduplicatedFreqs[cleanWord] = (deduplicatedFreqs[cleanWord] || 0) + freq;
+        // Remove common punctuation but preserve letters and numbers
+        cleanWord = cleanWord.replace(/[.,;:!?"'()\[\]{}]/g, '');
+        
+        // Remove any remaining non-letter characters except hyphens and apostrophes
+        cleanWord = cleanWord.replace(/[^a-zA-Z'-]/g, '');
+        
+        // Clean up multiple hyphens or apostrophes
+        cleanWord = cleanWord.replace(/[-']{2,}/g, '');
+        
+        // Remove leading/trailing hyphens or apostrophes
+        cleanWord = cleanWord.replace(/^[-']+|[-']+$/g, '');
+        
+        // Final trim
+        cleanWord = cleanWord.trim();
+        
+        // Filter for non-Chinese words
+        if (cleanWord.length >= 3 && /^[a-zA-Z][a-zA-Z'-]*[a-zA-Z]$|^[a-zA-Z]{3,}$/.test(cleanWord)) {
+          processedWords.push(`${word} -> ${cleanWord}`);
+          const freq = typeof frequency === 'number' ? frequency : 1;
+          deduplicatedFreqs[cleanWord] = (deduplicatedFreqs[cleanWord] || 0) + freq;
+        }
+      } else {
+        // For Chinese words, minimal cleaning - just trim
+        cleanWord = cleanWord.trim();
+        
+        // Chinese words are usually 1-4 characters, so accept all lengths
+        if (cleanWord.length >= 1) {
+          processedWords.push(`${word} -> ${cleanWord}`);
+          const freq = typeof frequency === 'number' ? frequency : 1;
+          deduplicatedFreqs[cleanWord] = (deduplicatedFreqs[cleanWord] || 0) + freq;
+        }
       }
     });
     
@@ -496,6 +512,7 @@ export default function Home() {
                           words={memoizedWords}
                           width={Math.min(750, typeof window !== 'undefined' ? window.innerWidth - 150 : 750)}
                           height={400}
+                          language={selectedLanguage}
                           onWordHover={handleWordHover}
                           onWordClick={handleWordClick}
                           onError={handleWordCloudError}
