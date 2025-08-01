@@ -28,7 +28,7 @@ COPY . .
 RUN mkdir -p static
 
 # Expose port
-EXPOSE 9000
+EXPOSE 7860
 
 # Run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "9000"]
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "7860"]
