@@ -410,7 +410,8 @@ export default function Home() {
                   <SelectContent>
                     <SelectItem value="english">🇺🇸 English</SelectItem>
                     <SelectItem value="indonesian">🇮🇩 Indonesian</SelectItem>
-                    <SelectItem value="chinese">🇨🇳 Chinese (Simplified)</SelectItem>
+                    <SelectItem value="chinese_simplified">🇨🇳 Chinese (Simplified)</SelectItem>
+                    <SelectItem value="chinese_traditional">🇹🇼 Chinese (Traditional)</SelectItem>
                   </SelectContent>
                 </Select>
               </CardContent>

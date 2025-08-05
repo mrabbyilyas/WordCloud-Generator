@@ -130,7 +130,7 @@ export function AnalyticsDashboard({ words, selectedLanguage, originalText, clea
         <Badge variant="outline" className="w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold">
           {rank}
         </Badge>
-        <span className={`font-medium ${selectedLanguage === 'chinese' ? 'font-chinese' : ''}`}>{word}</span>
+        <span className={`font-medium ${selectedLanguage === 'chinese_simplified' || selectedLanguage === 'chinese_traditional' ? 'font-chinese' : ''}`}>{word}</span>
       </div>
       <div className="text-sm text-muted-foreground font-mono">
         {frequency}
@@ -271,7 +271,7 @@ export function AnalyticsDashboard({ words, selectedLanguage, originalText, clea
                 <div className="bg-muted/50 rounded-lg p-4 max-h-96 overflow-y-auto">
                   <TextAnimate 
                     animation="fadeIn" 
-                    className={`text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap ${selectedLanguage === 'chinese' ? 'font-chinese' : ''}`}
+                    className={`text-sm leading-relaxed text-muted-foreground whitespace-pre-wrap ${selectedLanguage === 'chinese_simplified' || selectedLanguage === 'chinese_traditional' ? 'font-chinese' : ''}`}
                     delay={0.7}
                   >
                     {analytics.processedTextSample || "No cleaned text available"}

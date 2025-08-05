@@ -104,7 +104,7 @@ export function WordCloudVisualization({
         const angles = [0, 0, 0, 90, -90]; // Favor horizontal orientation
         return angles[Math.floor(Math.random() * angles.length)];
       })
-      .font(language === "chinese" ? "'Noto Sans SC', sans-serif" : "Arial, sans-serif")
+      .font(language === "chinese_simplified" || language === "chinese_traditional" ? "'Noto Sans SC', sans-serif" : "Arial, sans-serif")
       .fontSize(d => d.size || 20)
       .spiral("archimedean") // Back to archimedean for smoother distribution
       .random(() => 0.5) // Fixed random seed for consistent layout
@@ -173,7 +173,7 @@ export function WordCloudVisualization({
       console.log('text selection methods:', Object.getOwnPropertyNames(Object.getPrototypeOf(text)));
       
       text.style("font-size", d => `${d.size}px`)
-        .style("font-family", language === "chinese" ? "'Noto Sans SC', sans-serif" : "Arial, sans-serif")
+        .style("font-family", language === "chinese_simplified" || language === "chinese_traditional" ? "'Noto Sans SC', sans-serif" : "Arial, sans-serif")
         .style("font-weight", "bold")
         .style("fill", (d, i) => color(d.index?.toString() || i.toString()))
         .style("cursor", "pointer")
