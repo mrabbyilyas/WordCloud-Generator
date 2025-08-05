@@ -22,6 +22,14 @@ interface AnalyticsDashboardProps {
   cleanedText?: string;
 }
 
+// Language display names mapping
+const languageDisplayNames: { [key: string]: string } = {
+  'english': 'English',
+  'indonesian': 'Indonesian',
+  'chinese_simplified': 'Simplified Chinese',
+  'chinese_traditional': 'Traditional Chinese'
+};
+
 export function AnalyticsDashboard({ words, selectedLanguage, originalText, cleanedText }: AnalyticsDashboardProps) {
   const analytics = useMemo(() => {
     if (!words || words.length === 0) {
@@ -114,10 +122,10 @@ export function AnalyticsDashboard({ words, selectedLanguage, originalText, clea
           </TextAnimate>
           <TextAnimate 
             animation="fadeIn" 
-            className="text-2xl font-bold capitalize"
+            className="text-lg font-bold"
             delay={delay + 0.2}
           >
-            {language}
+            {languageDisplayNames[language] || language}
           </TextAnimate>
         </div>
       </div>
