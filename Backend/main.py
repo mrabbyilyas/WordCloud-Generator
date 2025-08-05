@@ -46,7 +46,7 @@ def index():
             "/upload-with-image": "POST - Upload text and get image directly",
             "parameters": {
                 "file": "Text file to process",
-                "language": "'english', 'indonesian', or 'chinese' (default: english)"
+                "language": "'english', 'indonesian', 'chinese_simplified', or 'chinese_traditional' (default: english)"
             }
         },
         "nltk_data_path": nltk.data.path
@@ -95,6 +95,21 @@ CHINESE_STOPWORDS = {
     '就是', '只是', '仅仅', '已经', '曾经', '正在', '将要', '可以', '能够', '应该'
 }
 
+# Chinese Traditional stopwords list (common Chinese Traditional stopwords)
+CHINESE_TRADITIONAL_STOPWORDS = {
+    '的', '了', '在', '是', '我', '有', '和', '就', '不', '人', '都', '一', '一個', '上',
+    '也', '很', '到', '說', '要', '去', '你', '會', '著', '沒有', '看', '好', '自己',
+    '這', '那', '她', '他', '它', '我們', '你們', '他們', '她們', '它們', '這個', '那個',
+    '些', '麼', '什麼', '怎麼', '怎樣', '如何', '為什麼', '哪', '哪裡', '哪兒', '誰',
+    '因為', '所以', '但是', '然而', '可是', '如果', '雖然', '即使', '無論', '不管',
+    '而且', '並且', '或者', '還是', '不是', '不要', '不會', '不能', '沒有', '這樣',
+    '那樣', '這裡', '那裡', '現在', '以前', '以後', '最', '很', '太', '非常', '十分',
+    '就是', '只是', '僅僅', '已經', '曾經', '正在', '將要', '可以', '能夠', '應該',
+    '於', '對', '對於', '從', '為', '與', '給', '讓', '被', '把', '將', '過', '當',
+    '進行', '這些', '那些', '時', '時候', '裡', '後', '前', '兩', '幾', '第', '每',
+    '種', '樣', '會', '還', '再', '只', '真', '問', '請', '用', '比', '等', '及'
+}
+
 def segment_chinese(text):
     """Segment Chinese text into words using jieba"""
     try:
@@ -111,6 +126,16 @@ def remove_stopwords_chinese(text):
         return ' '.join(filtered_words)
     except Exception as e:
         print(f"Chinese stopword removal error: {e}. Using original text.")
+        return text
+
+def remove_stopwords_chinese_traditional(text):
+    """Remove Chinese Traditional stopwords from segmented text"""
+    try:
+        words = text.split()
+        filtered_words = [word for word in words if word not in CHINESE_TRADITIONAL_STOPWORDS and len(word.strip()) > 0]
+        return ' '.join(filtered_words)
+    except Exception as e:
+        print(f"Chinese Traditional stopword removal error: {e}. Using original text.")
         return text
 
 def remove_chinese_punctuation(text):
@@ -147,8 +172,8 @@ def remove_numbers(text):
     return ''.join([i for i in text if not i.isdigit()])
 
 def remove_special_characters(text, language="english"):
-    if language == "chinese":
-        # For Chinese, keep Chinese characters, alphanumeric, and spaces
+    if language in ["chinese_simplified", "chinese_traditional"]:
+        # For Chinese (both Simplified and Traditional), keep Chinese characters, alphanumeric, and spaces
         return ''.join([i for i in text if i.isalnum() or i.isspace() or '\u4e00' <= i <= '\u9fff'])
     else:
         return ''.join([i for i in text if i.isalnum() or i.isspace()])
@@ -158,8 +183,8 @@ def generate_wordcloud_image(text, language="english"):
     try:
         # Set font path for Chinese if needed
         font_path = None
-        if language == "chinese":
-            # Try to find Chinese font
+        if language in ["chinese_simplified", "chinese_traditional"]:
+            # Try to find Chinese font (works for both Simplified and Traditional)
             chinese_fonts = [
                 "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
                 "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
@@ -228,8 +253,8 @@ async def upload_file(request: Request, file: UploadFile = File(...), language: 
     if file.content_type != "text/plain":
         raise HTTPException(status_code=400, detail="Invalid file type. Only text files are allowed.")
     
-    if language not in ["english", "indonesian", "chinese"]:
-        raise HTTPException(status_code=400, detail="Language must be either 'english', 'indonesian', or 'chinese'")
+    if language not in ["english", "indonesian", "chinese_simplified", "chinese_traditional"]:
+        raise HTTPException(status_code=400, detail="Language must be either 'english', 'indonesian', 'chinese_simplified', or 'chinese_traditional'")
 
     try:
         text = await file.read()
@@ -241,16 +266,23 @@ async def upload_file(request: Request, file: UploadFile = File(...), language: 
         elif language == "indonesian":
             cleaned_text = remove_stopwords_indonesian(text)
             cleaned_text = stem_indonesian(cleaned_text)
-        else:  # chinese
-            # For Chinese, first segment the text
+        elif language == "chinese_simplified":
+            # For Chinese Simplified, first segment the text
             cleaned_text = segment_chinese(text)
             # Remove Chinese punctuation
             cleaned_text = remove_chinese_punctuation(cleaned_text)
             # Remove stopwords
             cleaned_text = remove_stopwords_chinese(cleaned_text)
+        else:  # chinese_traditional
+            # For Chinese Traditional, first segment the text
+            cleaned_text = segment_chinese(text)
+            # Remove Chinese punctuation
+            cleaned_text = remove_chinese_punctuation(cleaned_text)
+            # Remove Traditional Chinese stopwords
+            cleaned_text = remove_stopwords_chinese_traditional(cleaned_text)
         
         # Common cleaning steps for all languages
-        if language != "chinese":
+        if language not in ["chinese_simplified", "chinese_traditional"]:
             cleaned_text = remove_punctuation(cleaned_text)
         cleaned_text = remove_whitespace(cleaned_text)
         cleaned_text = remove_numbers(cleaned_text)
@@ -298,8 +330,8 @@ async def upload_file_with_image(file: UploadFile = File(...), language: str = F
     if file.content_type != "text/plain":
         raise HTTPException(status_code=400, detail="Invalid file type. Only text files are allowed.")
     
-    if language not in ["english", "indonesian", "chinese"]:
-        raise HTTPException(status_code=400, detail="Language must be either 'english', 'indonesian', or 'chinese'")
+    if language not in ["english", "indonesian", "chinese_simplified", "chinese_traditional"]:
+        raise HTTPException(status_code=400, detail="Language must be either 'english', 'indonesian', 'chinese_simplified', or 'chinese_traditional'")
 
     try:
         text = await file.read()
@@ -311,16 +343,23 @@ async def upload_file_with_image(file: UploadFile = File(...), language: str = F
         elif language == "indonesian":
             cleaned_text = remove_stopwords_indonesian(text)
             cleaned_text = stem_indonesian(cleaned_text)
-        else:  # chinese
-            # For Chinese, first segment the text
+        elif language == "chinese_simplified":
+            # For Chinese Simplified, first segment the text
             cleaned_text = segment_chinese(text)
             # Remove Chinese punctuation
             cleaned_text = remove_chinese_punctuation(cleaned_text)
             # Remove stopwords
             cleaned_text = remove_stopwords_chinese(cleaned_text)
+        else:  # chinese_traditional
+            # For Chinese Traditional, first segment the text
+            cleaned_text = segment_chinese(text)
+            # Remove Chinese punctuation
+            cleaned_text = remove_chinese_punctuation(cleaned_text)
+            # Remove Traditional Chinese stopwords
+            cleaned_text = remove_stopwords_chinese_traditional(cleaned_text)
         
         # Common cleaning steps for all languages
-        if language != "chinese":
+        if language not in ["chinese_simplified", "chinese_traditional"]:
             cleaned_text = remove_punctuation(cleaned_text)
         cleaned_text = remove_whitespace(cleaned_text)
         cleaned_text = remove_numbers(cleaned_text)
@@ -331,8 +370,8 @@ async def upload_file_with_image(file: UploadFile = File(...), language: str = F
 
         # Set font path for Chinese if needed
         font_path = None
-        if language == "chinese":
-            # Try to find Chinese font
+        if language in ["chinese_simplified", "chinese_traditional"]:
+            # Try to find Chinese font (works for both Simplified and Traditional)
             chinese_fonts = [
                 "/usr/share/fonts/truetype/wqy/wqy-microhei.ttc",
                 "/usr/share/fonts/truetype/wqy/wqy-zenhei.ttc",
